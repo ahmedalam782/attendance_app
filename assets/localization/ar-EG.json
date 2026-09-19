@@ -1,0 +1,54 @@
+{
+  "global": {
+    "app_name": "الحضور",
+    "loading": "جارٍ التحميل...",
+    "retry": "إعادة المحاولة",
+    "setup_incomplete": "إعداد التطبيق غير مكتمل. تواصل مع المسؤول."
+  },
+  "login": {
+    "title": "سجل الدخول إلى حسابك",
+    "subtitle": "استخدم بريدك الإلكتروني وكلمة المرور للمتابعة",
+    "email_hint": "البريد الإلكتروني",
+    "password_hint": "كلمة المرور",
+    "login_button": "تسجيل الدخول",
+    "dont_have_account": "ليس لديك حساب؟",
+    "create_account": "إنشاء حساب",
+    "signed_in": "تم تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "logout_title": "تسجيل الخروج",
+    "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
+    "logout_button": "تسجيل الخروج",
+    "logout_cancel": "إلغاء",
+    "logout_success": "تم تسجيل الخروج بنجاح"
+  },
+  "register": {
+    "title": "أنشئ حسابك",
+    "subtitle": "سجّل ببريدك الإلكتروني للبدء",
+    "name_hint": "الاسم الكامل",
+    "email_hint": "البريد الإلكتروني",
+    "password_hint": "كلمة المرور",
+    "confirm_password_hint": "تأكيد كلمة المرور",
+    "create_button": "إنشاء حساب",
+    "already_have_account": "لديك حساب؟",
+    "login": "تسجيل الدخول"
+  },
+  "validations": {
+    "name_required": "أدخل اسمك.",
+    "email_required": "يرجى إدخال بريدك الإلكتروني",
+    "email_invalid": "أدخل بريداً إلكترونياً صحيحاً.",
+    "password_required": "أدخل كلمة المرور.",
+    "password_short": "استخدم 6 أحرف على الأقل.",
+    "confirm_password_required": "تأكيد كلمة المرور مطلوب",
+    "confirm_password_mismatch": "كلمتا المرور غير متطابقتين."
+  },
+  "auth_errors": {
+    "email_already_in_use": "هذا البريد مسجل بالفعل. سجل الدخول.",
+    "weak_password": "اختر كلمة مرور أقوى.",
+    "invalid_credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "network_request_failed": "تحقق من اتصال الإنترنت وحاول مجدداً.",
+    "too_many_requests": "محاولات كثيرة. حاول لاحقاً.",
+    "operation_not_allowed": "تسجيل الدخول بالبريد غير مفعل بعد.",
+    "user_disabled": "تم تعطيل هذا الحساب.",
+    "unknown": "حدث خطأ. حاول مجدداً."
+  }
+}

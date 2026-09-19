@@ -1,0 +1,10 @@
+targets:
+  $default:
+    sources:
+      include:
+        - lib/**
+        - test/**
+        - bin/**
+        - .env
+        - pubspec.yaml
+        - $package$

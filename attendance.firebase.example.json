@@ -1,0 +1,7 @@
+{
+  "ATTENDANCE_FIREBASE_PROJECT_ID": "your-attendance-project-id",
+  "ATTENDANCE_FIREBASE_API_KEY": "your-platform-api-key",
+  "ATTENDANCE_FIREBASE_APP_ID": "your-platform-app-id",
+  "ATTENDANCE_FIREBASE_SENDER_ID": "your-messaging-sender-id",
+  "ATTENDANCE_FIREBASE_IOS_BUNDLE_ID": "your-ios-bundle-id"
+}

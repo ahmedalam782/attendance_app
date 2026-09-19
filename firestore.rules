@@ -1,0 +1,60 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: Firebase Auth uid
+// Fields:
+//   - uid: string (required, immutable, must equal auth.uid)
+//   - email: string (required, immutable after create, valid email)
+//   - name: string (required, 1-80 chars)
+//   - createdAt: timestamp (required, immutable)
+//   - updatedAt: timestamp (required)
+//
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string
+        && email.size() >= 5
+        && email.size() <= 254
+        && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasOnly(['uid', 'email', 'name', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == request.auth.uid
+        && isValidEmail(data.email)
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      // Prefer FieldValue.serverTimestamp() so values align with request.time.
+      allow create: if isOwner(userId)
+        && isValidUser(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isOwner(userId)
+        && isValidUser(request.resource.data)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+  }
+}
