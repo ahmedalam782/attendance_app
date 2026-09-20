@@ -11,4 +11,6 @@ abstract class AuthRemoteDataSource {
   Future<AuthUser> register(RegisterParams params);
 
   Future<void> logout();
+
+  Future<void> sendPasswordResetEmail(String email, {String? languageCode});
 }

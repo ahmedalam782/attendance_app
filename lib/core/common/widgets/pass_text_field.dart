@@ -74,23 +74,27 @@ class _PassTextFormFieldState extends State<PassTextFormField> {
       style: 16.regular.copyWith(color: hasData ? AppColors.black33 : null),
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.originalWhite,
+        fillColor: AppColors.cardSurface,
         hintText: widget.hintText,
-        hintStyle: 16.regular.copyWith(color: AppColors.greyB5),
-        errorStyle: 12.regular.copyWith(color: AppColors.primerColorDark),
+        hintStyle: 15.regular.copyWith(color: AppColors.slate400),
+        errorStyle: 12.medium.copyWith(color: AppColors.primerColorDark),
         contentPadding: const EdgeInsetsDirectional.only(
-          start: 10,
-          end: 10,
-          top: 15,
-          bottom: 15,
+          start: 16,
+          end: 16,
+          top: 16,
+          bottom: 16,
         ),
-        prefixIcon: SvgPicture.asset(
-          AppIcons.iconsLock,
-          width: 20,
-          height: 20,
-          fit: BoxFit.scaleDown,
-          colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+        prefixIcon: Padding(
+          padding: const EdgeInsetsDirectional.only(start: 14, end: 10),
+          child: SvgPicture.asset(
+            AppIcons.iconsLock,
+            width: 20,
+            height: 20,
+            fit: BoxFit.scaleDown,
+            colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+          ),
         ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         suffixIcon: IconButton(
           onPressed: () => setState(() => _visible = !_visible),
           icon: SvgPicture.asset(
@@ -104,13 +108,28 @@ class _PassTextFormFieldState extends State<PassTextFormField> {
             ),
           ),
         ),
-        border: customOutLineBorders(),
-        enabledBorder: customOutLineBorders(),
-        disabledBorder: customOutLineBorders(),
-        errorBorder: customOutLineBorders(borderColor: AppColors.primerColorDark),
+        border: customOutLineBorders(
+          borderRadius: 14,
+          borderColor: AppColors.slate200,
+        ),
+        enabledBorder: customOutLineBorders(
+          borderRadius: 14,
+          borderColor: AppColors.slate200,
+          borderWidth: 1.0,
+        ),
+        disabledBorder: customOutLineBorders(
+          borderRadius: 14,
+          borderColor: AppColors.slate100,
+        ),
+        errorBorder: customOutLineBorders(
+          borderRadius: 14,
+          borderColor: AppColors.primerColorDark,
+          borderWidth: 1.2,
+        ),
         focusedBorder: customOutLineBorders(
+          borderRadius: 14,
           borderColor: AppColors.primerColor,
-          borderWidth: 1.5,
+          borderWidth: 1.6,
         ),
       ),
     );

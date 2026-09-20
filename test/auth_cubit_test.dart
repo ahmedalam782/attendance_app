@@ -7,6 +7,7 @@ import 'package:attendance_app/features/auth/domain/repositories/auth_repository
 import 'package:attendance_app/features/auth/domain/models/auth_user.dart';
 import 'package:attendance_app/features/auth/domain/params/login_params.dart';
 import 'package:attendance_app/features/auth/domain/params/register_params.dart';
+import 'package:attendance_app/features/auth/domain/use_cases/forgot_password_use_case.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/login_use_case.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/register_use_case.dart';
 import 'package:attendance_app/features/auth/presentation/view_model/cubit/auth_cubit.dart';
@@ -38,6 +39,10 @@ class FakeAuthRepository implements AuthRepository {
     logoutCalls++;
     return const Success();
   }
+
+  @override
+  Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode}) async =>
+      const Success();
 }
 
 void main() {
@@ -102,6 +107,23 @@ void main() {
     expect(repository.logoutCalls, 1);
     expect(cubit.state.loggedOut, isTrue);
     expect(cubit.state.error, isNull);
+    await cubit.close();
+  });
+
+  test('sends password reset email successfully', () async {
+    final repository = FakeAuthRepository();
+    final cubit = AuthCubit(
+      LoginUseCase(repository),
+      RegisterUseCase(repository),
+      LogoutSession(prefs, repository),
+      ForgotPasswordUseCase(repository),
+    );
+    expect(cubit.state.passwordResetSent, isFalse);
+    await cubit.sendPasswordResetEmail('student@example.com');
+    expect(cubit.state.passwordResetSent, isTrue);
+    expect(cubit.state.busy, isFalse);
+    cubit.resetForgotPasswordState();
+    expect(cubit.state.passwordResetSent, isFalse);
     await cubit.close();
   });
 }

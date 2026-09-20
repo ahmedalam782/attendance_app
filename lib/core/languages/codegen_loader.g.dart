@@ -35,7 +35,13 @@ class CodegenLoader extends AssetLoader{
     "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
     "logout_button": "تسجيل الخروج",
     "logout_cancel": "إلغاء",
-    "logout_success": "تم تسجيل الخروج بنجاح"
+    "logout_success": "تم تسجيل الخروج بنجاح",
+    "forgot_password": "نسيت كلمة المرور؟",
+    "forgot_password_title": "استعادة كلمة المرور",
+    "forgot_password_subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور",
+    "forgot_password_button": "إرسال رابط الاستعادة",
+    "forgot_password_success": "تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني بنجاح.",
+    "forgot_password_back": "العودة لتسجيل الدخول"
   },
   "register": {
     "title": "أنشئ حسابك",
@@ -66,6 +72,10 @@ class CodegenLoader extends AssetLoader{
     "operation_not_allowed": "تسجيل الدخول بالبريد غير مفعل بعد.",
     "user_disabled": "تم تعطيل هذا الحساب.",
     "unknown": "حدث خطأ. حاول مجدداً."
+  },
+  "splash": {
+    "subtitle": "نظام تسجيل وتوثيق الحضور الذكي",
+    "offline_ready": "جاهز للعمل دون اتصال بالإنترنت"
   }
 };
 static const Map<String,dynamic> _en_US = {
@@ -89,7 +99,13 @@ static const Map<String,dynamic> _en_US = {
     "logout_confirm": "Are you sure you want to sign out?",
     "logout_button": "Sign out",
     "logout_cancel": "Cancel",
-    "logout_success": "Signed out successfully"
+    "logout_success": "Signed out successfully",
+    "forgot_password": "Forgot password?",
+    "forgot_password_title": "Reset password",
+    "forgot_password_subtitle": "Enter your email address to receive a password reset link",
+    "forgot_password_button": "Send Reset Link",
+    "forgot_password_success": "A password reset link has been sent to your email.",
+    "forgot_password_back": "Back to sign in"
   },
   "register": {
     "title": "Create your account",
@@ -120,6 +136,10 @@ static const Map<String,dynamic> _en_US = {
     "operation_not_allowed": "Email sign-in is not enabled yet.",
     "user_disabled": "This account has been disabled.",
     "unknown": "Something went wrong. Please try again."
+  },
+  "splash": {
+    "subtitle": "Smart Offline Attendance System",
+    "offline_ready": "Offline Ready • Cloud Sync"
   }
 };
 static const Map<String, Map<String,dynamic>> mapLocales = {"ar_EG": _ar_EG, "en_US": _en_US};

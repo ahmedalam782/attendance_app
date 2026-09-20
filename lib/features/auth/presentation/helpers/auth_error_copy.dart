@@ -9,8 +9,8 @@ abstract final class AuthErrorCopy {
     'email-already-in-use' => LocaleKeys.auth_errors_email_already_in_use.tr(),
     'weak-password' => LocaleKeys.auth_errors_weak_password.tr(),
     'invalid-credential' ||
-    'wrong-password' ||
-    'user-not-found' => LocaleKeys.auth_errors_invalid_credential.tr(),
+    'wrong-password' => LocaleKeys.auth_errors_invalid_credential.tr(),
+    'user-not-found' => LocaleKeys.auth_errors_user_not_found.tr(),
     'network-request-failed' =>
       LocaleKeys.auth_errors_network_request_failed.tr(),
     'too-many-requests' => LocaleKeys.auth_errors_too_many_requests.tr(),

@@ -22,6 +22,12 @@ abstract class  LocaleKeys {
   static const login_logout_button = 'login.logout_button';
   static const login_logout_cancel = 'login.logout_cancel';
   static const login_logout_success = 'login.logout_success';
+  static const login_forgot_password = 'login.forgot_password';
+  static const login_forgot_password_title = 'login.forgot_password_title';
+  static const login_forgot_password_subtitle = 'login.forgot_password_subtitle';
+  static const login_forgot_password_button = 'login.forgot_password_button';
+  static const login_forgot_password_success = 'login.forgot_password_success';
+  static const login_forgot_password_back = 'login.forgot_password_back';
   static const login = 'login';
   static const register_title = 'register.title';
   static const register_subtitle = 'register.subtitle';
@@ -48,7 +54,10 @@ abstract class  LocaleKeys {
   static const auth_errors_too_many_requests = 'auth_errors.too_many_requests';
   static const auth_errors_operation_not_allowed = 'auth_errors.operation_not_allowed';
   static const auth_errors_user_disabled = 'auth_errors.user_disabled';
+  static const auth_errors_user_not_found = 'auth_errors.user_not_found';
   static const auth_errors_unknown = 'auth_errors.unknown';
   static const auth_errors = 'auth_errors';
-
+  static const splash_subtitle = 'splash.subtitle';
+  static const splash_offline_ready = 'splash.offline_ready';
+  static const splash = 'splash';
 }

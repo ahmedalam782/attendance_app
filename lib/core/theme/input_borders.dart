@@ -8,10 +8,10 @@ OutlineInputBorder customOutLineBorders({
   double? borderWidth,
 }) {
   return OutlineInputBorder(
-    borderRadius: BorderRadius.circular(borderRadius ?? 12),
+    borderRadius: BorderRadius.circular(borderRadius ?? 14),
     borderSide: BorderSide(
-      color: borderColor ?? AppColors.greyE0,
-      width: borderWidth ?? 0.7,
+      color: borderColor ?? AppColors.slate200,
+      width: borderWidth ?? 1.0,
     ),
   );
 }

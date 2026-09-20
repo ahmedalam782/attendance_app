@@ -31,6 +31,10 @@ class FakeRepository implements AuthRepository {
 
   @override
   Future<Result<void>> logout() async => const Success();
+
+  @override
+  Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode}) async =>
+      const Success();
 }
 
 Widget wrapAuth(Widget child) => EasyLocalization(

@@ -19,6 +19,10 @@ class FirebaseBootstrap {
 
     // Bind Firestore to the default app early so first Auth→profile writes
     // do not hit a cold pigeon channel after hot restart.
-    FirebaseFirestore.instanceFor(app: Firebase.app());
+    final firestore = FirebaseFirestore.instanceFor(app: Firebase.app());
+    firestore.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
   }
 }

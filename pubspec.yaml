@@ -74,6 +74,7 @@ flutter:
     - assets/localization/ar-EG.json
     - assets/localization/en-US.json
     - assets/icons/
+    - assets/images/
 
   fonts:
     - family: SomarSans

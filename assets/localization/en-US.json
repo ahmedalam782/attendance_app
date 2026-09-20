@@ -19,7 +19,13 @@
     "logout_confirm": "Are you sure you want to sign out?",
     "logout_button": "Sign out",
     "logout_cancel": "Cancel",
-    "logout_success": "Signed out successfully"
+    "logout_success": "Signed out successfully",
+    "forgot_password": "Forgot password?",
+    "forgot_password_title": "Reset password",
+    "forgot_password_subtitle": "Enter your email address to receive a password reset link",
+    "forgot_password_button": "Send Reset Link",
+    "forgot_password_success": "A password reset link has been sent to your email.",
+    "forgot_password_back": "Back to sign in"
   },
   "register": {
     "title": "Create your account",
@@ -49,6 +55,11 @@
     "too_many_requests": "Too many attempts. Please try again later.",
     "operation_not_allowed": "Email sign-in is not enabled yet.",
     "user_disabled": "This account has been disabled.",
+    "user_not_found": "No account found with this email address.",
     "unknown": "Something went wrong. Please try again."
+  },
+  "splash": {
+    "subtitle": "Smart Offline Attendance System",
+    "offline_ready": "Offline Ready • Cloud Sync"
   }
 }

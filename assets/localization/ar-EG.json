@@ -19,7 +19,13 @@
     "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
     "logout_button": "تسجيل الخروج",
     "logout_cancel": "إلغاء",
-    "logout_success": "تم تسجيل الخروج بنجاح"
+    "logout_success": "تم تسجيل الخروج بنجاح",
+    "forgot_password": "نسيت كلمة المرور؟",
+    "forgot_password_title": "استعادة كلمة المرور",
+    "forgot_password_subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور",
+    "forgot_password_button": "إرسال رابط الاستعادة",
+    "forgot_password_success": "تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني بنجاح.",
+    "forgot_password_back": "العودة لتسجيل الدخول"
   },
   "register": {
     "title": "أنشئ حسابك",
@@ -49,6 +55,11 @@
     "too_many_requests": "محاولات كثيرة. حاول لاحقاً.",
     "operation_not_allowed": "تسجيل الدخول بالبريد غير مفعل بعد.",
     "user_disabled": "تم تعطيل هذا الحساب.",
+    "user_not_found": "هذا البريد الإلكتروني غير مسجل لدينا.",
     "unknown": "حدث خطأ. حاول مجدداً."
+  },
+  "splash": {
+    "subtitle": "نظام تسجيل وتوثيق الحضور الذكي",
+    "offline_ready": "جاهز للعمل دون اتصال بالإنترنت"
   }
 }

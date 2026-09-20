@@ -17,6 +17,7 @@ class CustomButton extends StatelessWidget {
     this.height,
     this.radius,
     this.titleStyle,
+    this.prefixIcon,
     this.backGroundColor = AppColors.originalWhite,
     this.borderColor = AppColors.primerColor,
     this.gradient = AppColors.primerGradient,
@@ -32,6 +33,7 @@ class CustomButton extends StatelessWidget {
   final double? height;
   final double? radius;
   final TextStyle? titleStyle;
+  final Widget? prefixIcon;
   final Color? backGroundColor;
   final Color? borderColor;
   final LinearGradient? gradient;
@@ -44,7 +46,7 @@ class CustomButton extends StatelessWidget {
     final button = ElevatedButton(
       onPressed: disabled ? null : onTap,
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 15),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
         splashFactory: NoSplash.splashFactory,
         disabledBackgroundColor: AppColors.greyE0,
         backgroundColor: isGradient || !isFilled
@@ -69,29 +71,51 @@ class CustomButton extends StatelessWidget {
                 color: AppColors.originalWhite,
               ),
             )
-          : Text(
-              title ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style:
-                  titleStyle ??
-                  16.bold.copyWith(
-                    color: disabled
-                        ? AppColors.grey99
-                        : isFilled
-                        ? AppColors.primerColor
-                        : AppColors.originalWhite,
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (prefixIcon != null) ...[
+                  prefixIcon!,
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: Text(
+                    title ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        titleStyle ??
+                        16.bold.copyWith(
+                          color: disabled
+                              ? AppColors.grey99
+                              : isFilled
+                              ? (borderColor ?? AppColors.primerColor)
+                              : AppColors.originalWhite,
+                        ),
                   ),
+                ),
+              ],
             ),
     );
 
     Widget result = button;
     if (isGradient && gradient != null) {
-      result = DecoratedBox(
+      result = Container(
         decoration: BoxDecoration(
           gradient: disabled ? null : gradient,
           color: disabled ? AppColors.greyE0 : null,
           borderRadius: borderRadius,
+          boxShadow: disabled
+              ? null
+              : [
+                  BoxShadow(
+                    color: (borderColor ?? AppColors.primerColor)
+                        .withValues(alpha: 0.28),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
         ),
         child: Material(
           color: Colors.transparent,

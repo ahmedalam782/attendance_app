@@ -40,6 +40,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> logout() => executeFirebase(_remote.logout);
 
+  @override
+  Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode}) =>
+      executeFirebase(
+        () => _remote.sendPasswordResetEmail(email, languageCode: languageCode),
+      );
+
   /// Auth must succeed even if Firestore profile sync fails (channel/network).
   Future<void> _syncProfileSafely(Future<void> Function() sync) async {
     try {

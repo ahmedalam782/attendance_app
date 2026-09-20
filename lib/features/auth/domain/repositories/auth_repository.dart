@@ -11,4 +11,6 @@ abstract class AuthRepository {
   Future<Result<AuthUser>> register(RegisterParams params);
 
   Future<Result<void>> logout();
+
+  Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode});
 }

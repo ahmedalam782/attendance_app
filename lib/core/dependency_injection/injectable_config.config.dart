@@ -23,6 +23,7 @@ import '../../features/auth/data/datasources/user_profile_remote_data_source.dar
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
+import '../../features/auth/domain/use_cases/forgot_password_use_case.dart' as _i500;
 import '../../features/auth/domain/use_cases/login_use_case.dart' as _i1038;
 import '../../features/auth/domain/use_cases/register_use_case.dart' as _i1010;
 import '../../features/auth/firebase/datasources/firebase_auth_remote_data_source.dart'
@@ -76,11 +77,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1010.RegisterUseCase>(
       () => _i1010.RegisterUseCase(gh<_i787.AuthRepository>()),
     );
+    gh.factory<_i500.ForgotPasswordUseCase>(
+      () => _i500.ForgotPasswordUseCase(gh<_i787.AuthRepository>()),
+    );
     gh.factory<_i796.AuthCubit>(
       () => _i796.AuthCubit(
         gh<_i1038.LoginUseCase>(),
         gh<_i1010.RegisterUseCase>(),
         gh<_i932.LogoutSession>(),
+        gh<_i500.ForgotPasswordUseCase>(),
       ),
     );
     return this;

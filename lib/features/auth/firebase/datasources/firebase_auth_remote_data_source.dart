@@ -49,4 +49,12 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() => _auth.signOut();
+
+  @override
+  Future<void> sendPasswordResetEmail(String email, {String? languageCode}) async {
+    if (languageCode != null && languageCode.isNotEmpty) {
+      await _auth.setLanguageCode(languageCode);
+    }
+    await _auth.sendPasswordResetEmail(email: email.trim());
+  }
 }

@@ -448,3 +448,55 @@ match /programs/{pid}/sessions/{sid}/attendance/{aid} {
 - Small groups (scan one by one) or large events (100+ people, need fast entry)?
 - Do students need **instant confirmation** (Method A) or is self check-in with delayed confirmation (Method B) acceptable?
 - Languages: Arabic/English with RTL support?
+
+---
+
+## 15. Design System & Education Color Palette
+
+A clean and trustworthy palette designed for education apps.
+
+### Brand Colors
+
+| Role | Hex | Use |
+|---|---|---|
+| Primary | `#4F46E5` (indigo) | Buttons, app bar, active states |
+| Primary dark | `#3730A3` | Pressed states, headers |
+| Primary light | `#E0E7FF` | Chips, selected items, card highlights |
+| Accent | `#06B6D4` (cyan) | Scan button, highlights, progress |
+
+### Light Theme
+
+| Role | Hex |
+|---|---|
+| Background | `#F8FAFC` |
+| Surface (cards) | `#FFFFFF` |
+| Text primary | `#0F172A` |
+| Text secondary | `#64748B` |
+| Border/divider | `#E2E8F0` |
+
+### Dark Theme
+
+| Role | Hex |
+|---|---|
+| Background | `#0B1020` |
+| Surface (cards) | `#151B2E` |
+| Text primary | `#E5E7EB` |
+| Text secondary | `#94A3B8` |
+| Primary (contrast) | `#818CF8` |
+
+### Attendance Status Colors
+
+| Status | Hex | Symbol / Icon |
+|---|---|---|
+| Present | `#16A34A` (green) | ✓ Present |
+| Late | `#F59E0B` (amber) | ⏱ Late |
+| Absent | `#DC2626` (red) | ✕ Absent |
+| Excused | `#0284C7` (blue) | ℹ Excused |
+| Pending sync / Offline | `#64748B` (slate) | ⟳ Pending |
+
+### Scanner & Accessibility Rules
+
+- **QR Display**: Always render the QR code black on white in both light and dark themes for optical scanner reliability.
+- **Scanner Result Feedback**: Flash the full screen green (present), amber (late), or red (absent/invalid) for 1 second for instant door feedback without having to read text.
+- **Color-Blind Accessibility**: Never rely on color alone; always pair status colors with distinctive symbols/icons and clear text labels.
+

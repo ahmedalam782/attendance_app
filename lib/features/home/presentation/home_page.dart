@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/languages/locale_keys.g.dart';
 import '../../auth/presentation/view/pages/auth_page.dart';
+import '../../splash/presentation/splash_page.dart';
 import '../data/app_bootstrap_impl.dart';
 import '../domain/app_bootstrap.dart';
 
-/// First route: initializes Firebase/DI, then shows auth.
+/// First route: displays the animated splash screen during bootstrap,
+/// then transitions gracefully to the auth flow.
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.bootstrap});
 
@@ -35,7 +37,10 @@ class _HomePageState extends State<HomePage> {
       _error = null;
     });
     try {
-      await _bootstrap.run();
+      await Future.wait([
+        _bootstrap.run(),
+        Future<void>.delayed(const Duration(milliseconds: 1400)),
+      ]);
       if (!mounted) return;
       setState(() => _loading = false);
     } catch (error) {
@@ -49,11 +54,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (_error != null) {
-      return Scaffold(
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      child: _loading
+          ? const SplashPage(key: ValueKey('splash'))
+          : _error != null
+              ? _errorView(context)
+              : const AuthPage(key: ValueKey('auth')),
+    );
+  }
+
+  Widget _errorView(BuildContext context) => Scaffold(
+        key: const ValueKey('error'),
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -76,7 +90,4 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
-    }
-    return const AuthPage();
-  }
 }
