@@ -8,6 +8,7 @@ import '../../../../core/api/execute_firebase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/params/login_params.dart';
+import '../../domain/params/phone_auth_params.dart';
 import '../../domain/params/register_params.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../datasources/user_profile_remote_data_source.dart';
@@ -38,6 +39,24 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
   @override
+  Future<Result<PhoneOtpDispatch>> sendPhoneOtp(PhoneAuthParams params) =>
+      executeFirebase(() async {
+        final dispatch = await _remote.sendPhoneOtp(params);
+        if (dispatch is PhoneOtpAutoVerified) {
+          await _syncProfileSafely(() => _profiles.syncProfile(dispatch.user));
+        }
+        return dispatch;
+      });
+
+  @override
+  Future<Result<AuthUser>> verifyPhoneOtp(PhoneOtpParams params) =>
+      executeFirebase(() async {
+        final user = await _remote.verifyPhoneOtp(params);
+        await _syncProfileSafely(() => _profiles.syncProfile(user));
+        return user;
+      });
+
+  @override
   Future<Result<void>> logout() => executeFirebase(_remote.logout);
 
   @override
@@ -45,6 +64,14 @@ class AuthRepositoryImpl implements AuthRepository {
       executeFirebase(
         () => _remote.sendPasswordResetEmail(email, languageCode: languageCode),
       );
+
+  @override
+  Future<Result<AuthUser?>> getCurrentUser() =>
+      executeFirebase(_remote.getCurrentUser);
+
+  @override
+  Future<Result<AuthUser>> redeemInstructorCode(String code) =>
+      executeFirebase(() => _remote.redeemInstructorCode(code));
 
   /// Auth must succeed even if Firestore profile sync fails (channel/network).
   Future<void> _syncProfileSafely(Future<void> Function() sync) async {

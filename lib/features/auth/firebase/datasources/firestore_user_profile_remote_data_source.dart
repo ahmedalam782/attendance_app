@@ -20,9 +20,13 @@ class FirestoreUserProfileRemoteDataSource
 
   String _displayName(AuthUser user) {
     if (user.name?.trim().isNotEmpty == true) return user.name!.trim();
+    if (user.phoneNumber?.trim().isNotEmpty == true) {
+      return user.phoneNumber!.trim();
+    }
     final email = user.email.trim();
     final at = email.indexOf('@');
-    return at > 0 ? email.substring(0, at) : email;
+    if (at > 0) return email.substring(0, at);
+    return email.isNotEmpty ? email : 'User';
   }
 
   Future<void> _ensureAuthToken({bool forceRefresh = false}) async {
@@ -31,13 +35,19 @@ class FirestoreUserProfileRemoteDataSource
 
   Map<String, dynamic> _createPayload(AuthUser user) {
     final now = FieldValue.serverTimestamp();
-    return {
+    final payload = <String, dynamic>{
       'uid': user.id,
       'email': user.email.trim(),
       'name': _displayName(user),
+      'role': user.role.isNotEmpty ? user.role : 'student',
       'createdAt': now,
       'updatedAt': now,
     };
+    final phone = user.phoneNumber?.trim();
+    if (phone != null && phone.isNotEmpty) {
+      payload['phone'] = phone;
+    }
+    return payload;
   }
 
   Future<void> _withRetry(Future<void> Function() action) async {
@@ -72,10 +82,15 @@ class FirestoreUserProfileRemoteDataSource
 
     await _withRetry(() async {
       try {
-        await doc.update({
+        final updates = <String, dynamic>{
           'name': name,
           'updatedAt': FieldValue.serverTimestamp(),
-        });
+        };
+        final phone = user.phoneNumber?.trim();
+        if (phone != null && phone.isNotEmpty) {
+          updates['phone'] = phone;
+        }
+        await doc.update(updates);
       } on FirebaseException catch (error) {
         if (error.code == 'not-found') {
           await doc.set(_createPayload(user));

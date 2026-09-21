@@ -17,6 +17,15 @@ abstract final class AuthErrorCopy {
     'operation-not-allowed' =>
       LocaleKeys.auth_errors_operation_not_allowed.tr(),
     'user-disabled' => LocaleKeys.auth_errors_user_disabled.tr(),
+    'invalid-phone-number' => LocaleKeys.auth_errors_invalid_phone_number.tr(),
+    'invalid-verification-code' =>
+      LocaleKeys.auth_errors_invalid_verification_code.tr(),
+    'invalid-verification-id' =>
+      LocaleKeys.auth_errors_invalid_verification_id.tr(),
+    'session-expired' => LocaleKeys.auth_errors_session_expired.tr(),
+    'quota-exceeded' => LocaleKeys.auth_errors_quota_exceeded.tr(),
+    'missing-client-identifier' =>
+      LocaleKeys.auth_errors_missing_client_identifier.tr(),
     _ => LocaleKeys.auth_errors_unknown.tr(),
   };
 }

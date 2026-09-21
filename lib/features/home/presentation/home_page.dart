@@ -61,33 +61,44 @@ class _HomePageState extends State<HomePage> {
       child: _loading
           ? const SplashPage(key: ValueKey('splash'))
           : _error != null
-              ? _errorView(context)
+              ? BootstrapErrorView(
+                  key: const ValueKey('error'),
+                  onRetry: _initialize,
+                )
               : const AuthPage(key: ValueKey('auth')),
     );
   }
+}
 
-  Widget _errorView(BuildContext context) => Scaffold(
-        key: const ValueKey('error'),
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    LocaleKeys.global_setup_incomplete.tr(),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: _initialize,
-                    child: Text(LocaleKeys.global_retry.tr()),
-                  ),
-                ],
-              ),
+class BootstrapErrorView extends StatelessWidget {
+  const BootstrapErrorView({super.key, required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  LocaleKeys.global_setup_incomplete.tr(),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: onRetry,
+                  child: Text(LocaleKeys.global_retry.tr()),
+                ),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }

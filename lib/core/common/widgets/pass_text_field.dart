@@ -71,13 +71,13 @@ class _PassTextFormFieldState extends State<PassTextFormField> {
       onFieldSubmitted: widget.onFieldSubmitted,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       cursorColor: AppColors.primerColor,
-      style: 16.regular.copyWith(color: hasData ? AppColors.black33 : null),
+      style: 14.regular.copyWith(color: hasData ? AppColors.black33 : null),
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.cardSurface,
         hintText: widget.hintText,
-        hintStyle: 15.regular.copyWith(color: AppColors.slate400),
-        errorStyle: 12.medium.copyWith(color: AppColors.primerColorDark),
+        hintStyle: 13.regular.copyWith(color: AppColors.slate400),
+        errorStyle: 11.medium.copyWith(color: AppColors.primerColorDark),
         contentPadding: const EdgeInsetsDirectional.only(
           start: 16,
           end: 16,

@@ -54,12 +54,12 @@ class CustomToast {
       ),
       title: Text(
         header ?? '',
-        style: 14.semiBold.copyWith(color: AppColors.black04),
+        style: 13.semiBold.copyWith(color: AppColors.black04),
       ),
       description: description != null
           ? Text(
               description!,
-              style: 14.regular.copyWith(color: AppColors.grey99),
+              style: 12.regular.copyWith(color: AppColors.grey99),
             )
           : null,
       autoCloseDuration: const Duration(seconds: 5),

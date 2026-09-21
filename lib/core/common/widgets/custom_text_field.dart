@@ -16,6 +16,7 @@ class CustomTextFormField extends StatefulWidget {
     this.textInputType,
     this.prefixIcon,
     this.prefixSvg,
+    this.prefixWidget,
     this.suffixWidget,
     this.hintText,
     this.title,
@@ -27,6 +28,7 @@ class CustomTextFormField extends StatefulWidget {
     this.maxLength,
     this.onChanged,
     this.inputFormatters,
+    this.focusNode,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
   });
 
@@ -35,6 +37,7 @@ class CustomTextFormField extends StatefulWidget {
   final TextInputType? textInputType;
   final IconData? prefixIcon;
   final String? prefixSvg;
+  final Widget? prefixWidget;
   final Widget? suffixWidget;
   final String? hintText;
   final String? title;
@@ -46,6 +49,7 @@ class CustomTextFormField extends StatefulWidget {
   final int? maxLength;
   final void Function(String?)? onChanged;
   final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
   final AutovalidateMode autovalidateMode;
 
   @override
@@ -83,7 +87,9 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
     final iconColor = hasData ? AppColors.black33 : AppColors.grey99;
 
     Widget? prefix;
-    if (widget.prefixSvg != null) {
+    if (widget.prefixWidget != null) {
+      prefix = widget.prefixWidget;
+    } else if (widget.prefixSvg != null) {
       prefix = SvgPicture.asset(
         widget.prefixSvg!,
         width: 20,
@@ -97,6 +103,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
 
     return TextFormField(
       controller: _controller,
+      focusNode: widget.focusNode,
       autovalidateMode: widget.autovalidateMode,
       obscureText: widget.isObscureText,
       readOnly: widget.isReadOnly,
@@ -110,7 +117,16 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       inputFormatters: widget.inputFormatters,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       cursorColor: AppColors.primerColor,
-      style: 16.regular.copyWith(color: hasData ? AppColors.black33 : null),
+      style: 14.regular.copyWith(color: hasData ? AppColors.black33 : null),
+      buildCounter: widget.maxLength == null
+          ? null
+          : (
+              context, {
+              required currentLength,
+              required isFocused,
+              required maxLength,
+            }) =>
+              const SizedBox.shrink(),
       decoration: InputDecoration(
         filled: true,
         fillColor: widget.isReadOnly
@@ -119,9 +135,9 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         hintText: widget.hintText,
         labelText: widget.title,
         floatingLabelBehavior: FloatingLabelBehavior.never,
-        hintStyle: 15.regular.copyWith(color: AppColors.slate400),
-        labelStyle: 15.regular.copyWith(color: AppColors.slate400),
-        errorStyle: 12.medium.copyWith(color: AppColors.primerColorDark),
+        hintStyle: 13.regular.copyWith(color: AppColors.slate400),
+        labelStyle: 13.regular.copyWith(color: AppColors.slate400),
+        errorStyle: 11.medium.copyWith(color: AppColors.primerColorDark),
         contentPadding: const EdgeInsetsDirectional.only(
           start: 16,
           end: 16,

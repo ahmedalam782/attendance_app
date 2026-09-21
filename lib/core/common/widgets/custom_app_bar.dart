@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 
-/// Clean custom AppBar supporting light & dark themes as defined in PROJECT.md.
+/// Clean AppBar with standard back affordance (no custom floating buttons).
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
@@ -16,6 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBackButton = true,
     this.centerTitle = true,
     this.backgroundColor,
+    this.showBottomBorder = true,
   });
 
   final String? title;
@@ -26,6 +27,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
   final bool centerTitle;
   final Color? backgroundColor;
+  final bool showBottomBorder;
 
   @override
   Size get preferredSize => Size.fromHeight(
@@ -39,9 +41,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         showBackButton &&
         Navigator.of(context).canPop()) {
       effectiveLeading = IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-        color: AppColors.textPrimary,
-        onPressed: () => Navigator.of(context).pop(),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => Navigator.of(context).maybePop(),
+        icon: Icon(
+          Directionality.of(context) == TextDirection.rtl
+              ? Icons.arrow_forward_ios_rounded
+              : Icons.arrow_back_ios_new_rounded,
+          size: 18,
+          color: AppColors.textPrimary,
+        ),
       );
     }
 
@@ -50,24 +58,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           (title != null
               ? Text(
                   title!,
-                  style: 18.bold.copyWith(color: AppColors.textPrimary),
+                  style: 16.bold.copyWith(color: AppColors.textPrimary),
                 )
               : null),
       centerTitle: centerTitle,
+      automaticallyImplyLeading: false,
       leading: effectiveLeading,
       actions: actions,
       bottom: bottom,
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: backgroundColor ?? AppColors.cardSurface,
+      foregroundColor: AppColors.textPrimary,
+      surfaceTintColor: AppColors.transparent,
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: AppColors.transparent,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
-      shape: const Border(
-        bottom: BorderSide(color: AppColors.border, width: 0.8),
-      ),
+      shape: showBottomBorder
+          ? const Border(
+              bottom: BorderSide(color: AppColors.border, width: 0.8),
+            )
+          : null,
     );
   }
 }

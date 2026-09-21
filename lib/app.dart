@@ -4,15 +4,24 @@ import 'package:flutter/services.dart';
 import 'package:toastification/toastification.dart';
 
 import 'core/common/widgets/app_status_bar_overlay.dart';
+import 'core/routes/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_typography.dart';
 import 'core/utils/constants/app_strings.dart';
-import 'features/home/presentation/home_page.dart';
 
-/// Root widget — theme + MaterialApp shell only (Al Faris style).
-class AttendanceApp extends StatelessWidget {
-  const AttendanceApp({super.key});
+/// Root widget — theme + MaterialApp.router with AutoRoute (Al Faris style).
+class AttendanceApp extends StatefulWidget {
+  const AttendanceApp({super.key, this.router});
+
+  final AppRouter? router;
+
+  @override
+  State<AttendanceApp> createState() => _AttendanceAppState();
+}
+
+class _AttendanceAppState extends State<AttendanceApp> {
+  late final AppRouter _appRouter = widget.router ?? AppRouter();
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +31,7 @@ class AttendanceApp extends StatelessWidget {
     return ToastificationWrapper(
       child: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: MaterialApp(
+        child: MaterialApp.router(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
@@ -30,8 +39,9 @@ class AttendanceApp extends StatelessWidget {
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
-          navigatorObservers: [appStatusBarRouteObserver],
-          home: const HomePage(),
+          routerConfig: _appRouter.config(
+            navigatorObservers: () => [appStatusBarRouteObserver],
+          ),
           builder: (context, child) {
             return MediaQuery(
               data: MediaQuery.of(

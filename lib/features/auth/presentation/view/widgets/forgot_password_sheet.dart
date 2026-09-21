@@ -6,11 +6,13 @@ import 'package:toastification/toastification.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
+import '../../../../../core/common/widgets/sheet_drag_handle.dart';
 import '../../../../../core/config/validations.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_icons.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../../core/utils/form_utils.dart';
 import '../../helpers/auth_error_copy.dart';
 import '../../view_model/cubit/auth_cubit.dart';
 import '../../view_model/cubit/auth_states.dart';
@@ -57,8 +59,7 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
   }
 
   Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    FocusScope.of(context).unfocus();
+    if (!FormUtils.validateAndUnfocus(_formKey, context)) return;
     await context.read<AuthCubit>().sendPasswordResetEmail(
           _emailController.text.trim(),
           languageCode: context.locale.languageCode,
@@ -102,34 +103,45 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
           child: AnimatedSize(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOutCubic,
-            child: isSuccess ? _buildSuccessView() : _buildFormView(state),
+            child: isSuccess
+                ? const ForgotPasswordSuccessView()
+                : ForgotPasswordFormView(
+                    formKey: _formKey,
+                    emailController: _emailController,
+                    isBusy: state.busy,
+                    onSubmit: _submit,
+                  ),
           ),
         );
       },
     );
   }
+}
 
-  Widget _buildFormView(AuthStates state) {
+class ForgotPasswordFormView extends StatelessWidget {
+  const ForgotPasswordFormView({
+    super.key,
+    required this.formKey,
+    required this.emailController,
+    required this.isBusy,
+    required this.onSubmit,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final TextEditingController emailController;
+  final bool isBusy;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
     return Form(
-      key: _formKey,
+      key: formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.slate200,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+          const SheetDragHandle(width: 44),
           const SizedBox(height: 20),
-
-          // Icon badge
           Center(
             child: Container(
               width: 58,
@@ -150,77 +162,63 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Title
           Text(
             LocaleKeys.login_forgot_password_title.tr(),
             textAlign: TextAlign.center,
-            style: 20.bold.copyWith(
+            style: 17.bold.copyWith(
               color: AppColors.slate900,
               letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 6),
-
-          // Subtitle
           Text(
             LocaleKeys.login_forgot_password_subtitle.tr(),
             textAlign: TextAlign.center,
-            style: 13.regular.copyWith(
+            style: 12.regular.copyWith(
               color: AppColors.slate400,
               height: 1.4,
             ),
           ),
           const SizedBox(height: 22),
-
-          // Email Input
           CustomTextFormField(
-            controller: _emailController,
+            controller: emailController,
             hintText: LocaleKeys.login_email_hint.tr(),
             prefixSvg: AppIcons.iconsEmailOutline,
             textInputType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _submit(),
+            onFieldSubmitted: (_) => onSubmit(),
             validator: Validations.validateEmail,
           ),
           const SizedBox(height: 20),
-
-          // Action Button
           CustomButton(
             title: LocaleKeys.login_forgot_password_button.tr(),
-            isLoading: state.busy,
-            onTap: state.busy ? null : _submit,
+            isLoading: isBusy,
+            onTap: isBusy ? null : onSubmit,
           ),
           const SizedBox(height: 10),
-
-          // Cancel / Back
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               LocaleKeys.login_forgot_password_back.tr(),
-              style: 14.semiBold.copyWith(color: AppColors.slate400),
+              style: 13.semiBold.copyWith(color: AppColors.slate400),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildSuccessView() {
+class ForgotPasswordSuccessView extends StatelessWidget {
+  const ForgotPasswordSuccessView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: Container(
-            width: 44,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.slate200,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
+        const SheetDragHandle(width: 44),
         const SizedBox(height: 24),
         Center(
           child: Container(
@@ -241,13 +239,13 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
         Text(
           LocaleKeys.login_forgot_password_title.tr(),
           textAlign: TextAlign.center,
-          style: 20.bold.copyWith(color: AppColors.slate900),
+          style: 17.bold.copyWith(color: AppColors.slate900),
         ),
         const SizedBox(height: 8),
         Text(
           LocaleKeys.login_forgot_password_success.tr(),
           textAlign: TextAlign.center,
-          style: 14.regular.copyWith(
+          style: 13.regular.copyWith(
             color: AppColors.slate600,
             height: 1.4,
           ),
@@ -255,7 +253,7 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
         const SizedBox(height: 24),
         CustomButton(
           title: LocaleKeys.login_forgot_password_back.tr(),
-          titleStyle: 15.bold.copyWith(color: AppColors.originalWhite),
+          titleStyle: 14.bold,
           onTap: () => Navigator.of(context).pop(),
         ),
         const SizedBox(height: 8),

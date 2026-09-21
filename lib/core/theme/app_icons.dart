@@ -17,4 +17,7 @@ class AppIcons {
   static const String iconsOpenEye = "assets/icons/open_eye.svg";
   static const String iconsPerson = "assets/icons/person.svg";
   static const String iconsPersonCircle = "assets/icons/person_circle.svg";
+  static const String iconsPhone = "assets/icons/phone.svg";
+  static const String iconsDownArrow = "assets/icons/down_arrow.svg";
+  static const String iconsSearch = "assets/icons/search.svg";
 }

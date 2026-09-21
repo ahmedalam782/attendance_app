@@ -47,3 +47,24 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
+# Archives / packages
+*.zip
+*.apk
+*.aab
+
+# Firebase Service Account (contains private keys — NEVER commit!)
+**/service-account.json
+
+# Local seeder dependencies
+necessary_files/node_modules/
+necessary_files/package-lock.json
+
+# Cloud Function local env (contains credentials)
+functions/.env
+
+# Signing keys and Firebase config (sensitive — keep local only)
+necessary_files/*.jks
+necessary_files/*.keystore
+necessary_files/key.properties
+necessary_files/google-services.json
+necessary_files/GoogleService-Info.plist

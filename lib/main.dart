@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
-import 'core/languages/codegen_loader.g.dart';
 import 'core/languages/lang.dart';
 
 Future<void> main() async {
@@ -29,8 +28,7 @@ Future<void> main() async {
       fallbackLocale: arabicLocale,
       startLocale: arabicLocale,
       path: assetsLocalization,
-      assetLoader: const CodegenLoader(),
-      useFallbackTranslations: true,
+      useFallbackTranslations: false,
       child: const AttendanceApp(),
     ),
   );

@@ -1,502 +1,555 @@
-b  # Attendance App: Courses, Events & Bootcamps
+# PROJECT.md — Architecture Knowledge Base
 
-A Flutter app for tracking student attendance with **QR check-in that works offline**. Admin and student roles both live on mobile.
-
----
-
-## 1. Goals
-
-- Track attendance for **courses**, **events**, and **bootcamps** in one app.
-- Admin/instructor works fully from a phone (no web dashboard required).
-- QR check-in works with **no internet** and syncs when the connection returns.
-- Resistant to cheating (screenshot sharing, fake QR codes, duplicate scans).
+> **App Name:** Attendance App (final name TBD, set in `AppStrings.appName`)
+> **Purpose:** Track student attendance for courses, events, and bootcamps using QR check-in that works offline, with both Admin and Student roles on mobile.
+> **Platform:** iOS, Android
+> **Backend:** Firebase (Auth, Firestore, Cloud Functions, FCM)
+> **Flutter SDK:** from `pubspec.yaml` → `environment.sdk`
 
 ---
 
-## 2. Roles & Features
-
-### Admin / Instructor
-- Create a **program** (course, event, or bootcamp) with title, dates, location.
-- Add **sessions** (each day/lecture is one session).
-- Enroll students: manual add, CSV import, or invite link/code.
-- Start / close a session and scan students in.
-- Manual check-in (fallback) and manual status edit (present / late / absent / excused).
-- Live attendance list for the running session.
-- Reports per session, per student, per program, with export to Excel/PDF.
-- Announcements and push notifications.
-- (Optional) Multiple admins/assistants per program.
-
-### Student
-- Join a program by invite code or link.
-- View schedule and upcoming sessions.
-- Show **personal QR code** (works offline).
-- Attendance history and attendance percentage.
-- Notifications and reminders (session starting, low attendance warning).
-
----
-
-## 3. Attendance Methods
-
-| Method | Who scans | Offline? | Best for |
-|---|---|---|---|
-| **A. Student QR, admin scans** (primary) | Admin | Yes, fully | Any group size, most reliable |
-| **B. Rotating session QR, student scans** | Student | Yes, but confirmed only after sync | Self check-in, no admin at the door |
-| **C. Manual check-in** (fallback) | Admin | Yes | Dead phone, no QR |
-| **D. Extras** (optional) | n/a | Partly | Geofence, PIN code |
-
-**Recommended:** ship **A + C** first. Add **B** later if you need self check-in.
-
----
-
-## 4. Offline QR Design
-
-### 4.1 Method A: signed student credential
-
-**Enrollment (online):**
-
-1. Student joins a program.
-2. Server (Cloud Function) creates a credential and signs it with a private key (**Ed25519**):
-
-```json
-{ "v": 1, "sid": "student_123", "pid": "program_456", "iat": 1790000000, "exp": 1800000000 }
-```
-
-3. Token format: `base64url(payload).base64url(signature)`
-4. Student app stores the token locally and renders it as a QR code. **No internet needed to display it.**
-
-**Check-in (offline):**
-
-1. Admin app ships with the server's **public key** (bundled, or fetched once and cached).
-2. Admin scans the QR, splits the token, and verifies the signature locally.
-3. Checks: signature valid, `exp` not passed, `pid` matches the running session's program, student is in the downloaded roster.
-4. Saves the record locally (`synced = false`) and shows green/red feedback instantly.
-5. When online, records upload automatically.
-
-**Why it's safe:** a forged QR fails signature verification, and the private key never leaves the server.
-
-### 4.2 Anti-screenshot hardening (optional, phase 2)
-
-A signed QR could be screenshotted and shared. Mitigations:
-
-- Add a **rotating code** (TOTP, 30s window) to the QR, derived from a per-student secret.
-- The admin app downloads the session roster **with per-student secrets** while online (store in encrypted storage), so it can verify the rotating code offline.
-- Simpler alternative: rely on the admin seeing the student's face/ID at check-in, plus the duplicate-scan block.
-
-### 4.3 Method B: rotating session QR (student scans)
-
-- Admin app generates a QR every 20-30 seconds: `HMAC(sessionSecret, floor(time / 30))`. This is a local calculation, so it works offline.
-- Student app scans and stores a **pending** check-in: `{sessionId, code, scannedAt, deviceId}`.
-- The student's phone **cannot verify** the code (the secret stays with admin/server). The server validates it on sync.
-- Trade-off: students learn whether it was accepted only after they reconnect.
-
-### 4.4 Sync rules
-
-- **Idempotent writes:** one record per `(sessionId, studentId)`. Use a deterministic ID such as `${sessionId}_${studentId}`, so retries and double-syncs never duplicate.
-- **First scan wins:** if two admins scan the same student, keep the earliest timestamp.
-- **Clock tampering:** on sync, reject or flag scans whose timestamp falls outside the session window.
-- **Retry with backoff** when connectivity returns (`connectivity_plus`).
-- Show a **"pending sync" badge** so the admin knows what hasn't uploaded yet.
-
----
-
-## 5. Architecture
-
-**Flutter** with **Clean Architecture** and **Cubit/BLoC**.
+## 1. Project Structure
 
 ```
 lib/
+├── main.dart                    # Entry point: Firebase init, Firestore settings, splash, DI, localization
+├── app.dart                     # Root widget: MaterialApp.router, theme, ScreenUtil
+├── firebase_options.dart        # Generated by `flutterfire configure`
 ├── core/
-│   ├── di/                    # get_it / injectable
-│   ├── network/               # connectivity, error mapping
-│   ├── crypto/                # token verify, TOTP
+│   ├── api/                     # Result<T>, BaseState, failures (no Dio in this project)
+│   │   ├── base_response/       # Result<T> sealed class (Success/Error/Cancelled)
+│   │   ├── base_state/          # BaseState, PaginatedState, mixins
+│   │   └── errors/              # Failure classes (AuthFailure, ...), network info
+│   ├── common/
+│   │   ├── widgets/             # Shared UI (buttons, fields, dialogs, StatusChip, QrCard, PendingSyncBadge)
+│   │   └── animation/
+│   ├── config/
+│   │   ├── classes/             # Debounce, utilities
+│   │   ├── extensions/
+│   │   └── validations/
+│   ├── crypto/                  # QR token verifier (Ed25519), TOTP (phase 3)
+│   ├── dependency_injection/
+│   │   ├── injectable_config.dart
+│   │   ├── injectable_config.config.dart   # Generated
+│   │   ├── register_module.dart            # SharedPrefs, SecureStorage
+│   │   └── firebase_module.dart            # FirebaseAuth, FirebaseFirestore, FirebaseFunctions
+│   ├── helper/                  # UserHelper, connectivity, SessionCleaner
+│   ├── languages/
+│   │   ├── lang.dart
+│   │   └── locale_keys.g.dart
+│   ├── routes/
+│   │   ├── app_router.dart
+│   │   ├── app_router.gr.dart
+│   │   ├── routes.dart
+│   │   └── app_routes/          # global_routes.dart, admin_routes.dart, student_routes.dart
+│   ├── theme/
+│   │   ├── app_colors.dart
+│   │   ├── app_typography.dart
+│   │   ├── app_theme.dart
+│   │   ├── app_icons.dart
+│   │   ├── app_images.dart
+│   │   └── app_animations.dart
 │   └── utils/
-├── features/
-│   ├── auth/
-│   │   ├── data/ domain/ presentation/
-│   ├── programs/              # courses, events, bootcamps
-│   ├── sessions/
-│   ├── enrollment/
-│   ├── attendance/
-│   │   ├── data/
-│   │   │   ├── datasources/   # remote (Firestore), local (Drift/Firestore cache)
-│   │   │   ├── models/
-│   │   │   └── repositories/
-│   │   ├── domain/
-│   │   │   ├── entities/
-│   │   │   ├── repositories/
-│   │   │   └── usecases/      # ScanStudentQr, ManualCheckIn, SyncPending
-│   │   └── presentation/
-│   │       ├── cubit/
-│   │       └── pages/         # scanner, live list, student QR
-│   ├── reports/
-│   └── notifications/
-└── main.dart
+│       ├── constants/           # AppStrings, AppCacheKeys, AppNumbers, FirestorePaths
+│       └── params.dart          # Request parameter classes
+└── features/
+    ├── auth/                    # login, register, forgot password, Google, instructor code
+    ├── programs/                # course / event / bootcamp CRUD, join by code
+    ├── sessions/                # session scheduling, open/close
+    ├── enrollment/              # add students, CSV import, invite link, signed QR credential
+    ├── attendance/              # scanner, student QR, manual check-in, offline writes, pending badge
+    ├── reports/                 # per-session / per-student reports, export
+    └── notifications/
+firebase/
+├── functions/index.js           # Cloud Functions
+├── firestore.rules
+└── firestore.indexes.json
 ```
 
-Role-based routing after login: `admin` goes to the Admin shell, `student` goes to the Student shell.
+Each feature follows:
+
+```
+feature_name/
+├── api/            # datasource contracts
+├── data/           # datasource impls (Firebase), models (fromJson/toJson), repository impls
+├── domain/         # abstract interface repositories, use_cases (call())
+└── presentation/
+    ├── view_model/cubit/     # @injectable cubits + states
+    └── view/
+        ├── pages/            # thin RoutePage only
+        ├── widgets/          # public *Body and UI pieces
+        └── utils/            # non-widget helpers (share, camera session, validators, handlers)
+```
+
+**Architecture:** Clean Architecture (feature-first) with `api/`, `data/`, `domain/`, `presentation/` layers per feature.
 
 ---
 
-## 6. Backend Options
+## 2. Design System Patterns
 
-### Option 1: Firebase (fastest to ship)
+### Colors
+Defined in `lib/core/theme/app_colors.dart` as `abstract class AppColors` (`static const`). **Never use raw `Color()`.**
 
-- **Auth:** email/phone (+ Google if wanted)
-- **Firestore:** enable offline persistence (on by default on mobile)
-- **Cloud Functions:** issue signed credentials, validate rotating codes, generate reports
-- **FCM:** notifications
-- Use **deterministic doc IDs** for attendance (`sessionId_studentId`), so offline writes queue automatically and can never duplicate.
-- Use `metadata.hasPendingWrites` to show the "pending sync" badge.
+```dart
+abstract class AppColors {
+  // Brand
+  static const Color primary = Color(0xFF4F46E5);
+  static const Color primaryDark = Color(0xFF3730A3);
+  static const Color primaryLight = Color(0xFFE0E7FF);
+  static const Color accent = Color(0xFF06B6D4);
 
-### Option 2: Supabase (SQL)
+  // Light theme
+  static const Color background = Color(0xFFF8FAFC);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color border = Color(0xFFE2E8F0);
 
-- Better if you want heavy relational reports.
-- You'll need your own local queue (**Drift**) for offline scans.
+  // Dark theme
+  static const Color darkBackground = Color(0xFF0B1020);
+  static const Color darkSurface = Color(0xFF151B2E);
+  static const Color darkTextPrimary = Color(0xFFE5E7EB);
+  static const Color darkTextSecondary = Color(0xFF94A3B8);
+  static const Color darkPrimary = Color(0xFF818CF8);
 
-**Recommendation:** Firebase for v1.
+  // Attendance status
+  static const Color present = Color(0xFF16A34A);
+  static const Color late = Color(0xFFF59E0B);
+  static const Color absent = Color(0xFFDC2626);
+  static const Color excused = Color(0xFF0284C7);
+  static const Color pendingSync = Color(0xFF64748B);
+
+  // QR always black on white, even in dark mode
+  static const Color qrForeground = Color(0xFF000000);
+  static const Color qrBackground = Color(0xFFFFFFFF);
+}
+```
+
+Status is never shown by color alone: pair with an icon and label (✓ Present, ⏱ Late, ✕ Absent, ℹ Excused).
+
+### Typography
+- `AppTypography` handles locale-aware font family and brightness-aware color.
+- Use the `num` extension: `16.bold`, `14.medium`, `12.regular`. **Never raw `TextStyle()`.**
+
+### Theme
+`AppTheme.lightTheme` / `AppTheme.darkTheme`, Material 3, RTL supported (Arabic primary), `TextScaler.noScaling`.
+
+### Assets
+`AppIcons`, `AppImages`, `AppAnimations` generated from `assets/`. Localization in `assets/localization/` (`ar-EG.json`, `en-US.json`).
+
+### Common UI Components (`lib/core/common/widgets/`)
+`CustomButton`, `CustomTextField`, `PassTextField`, `CustomAppBar`, `CustomCachedImage`, `CustomErrorWidget`, `CustomNoDataWidget`, `CommonStateBuilder`, `CustomPaginatedView`, `CustomToast`, `CustomSuccessDialog`, `AppLoadingDialog`, `CustomConfirmationBottomSheet`.
+
+Attendance-specific shared widgets to add: `StatusChip` (present/late/absent/excused), `PendingSyncBadge`, `QrCard` (always white background).
 
 ---
 
-## 7. Data Model
+## 3. Navigation Pattern
+
+- **Router:** AutoRoute (`@AutoRouterConfig`).
+- **Files:** `app_router.dart`, `routes.dart`, `app_routes/global_routes.dart` (auth), `admin_routes.dart`, `student_routes.dart`.
+- **Auth guard:** splash calls `AuthCubit.checkSession()` (reads the cached Firebase session, works offline), then routes:
+  - no user → Login
+  - `admin` → Admin shell (`AdminLayout`: Programs, Scanner, Reports, Settings)
+  - `student` → Student shell (`StudentLayout`: My Programs, My QR, History, Settings)
+- **Cross-role protection:** admin routes redirect students to the Student shell, and vice versa.
+- **Transition:** platform-adaptive slide, 450ms.
+
+### Adding a new route
+1. Screen with `@RoutePage()`
+2. Path constant in `routes.dart`
+3. Register `CustomRoute(...)` in the matching routes file
+4. `dart run build_runner build --delete-conflicting-outputs`
+
+---
+
+## 4. State Management
+
+- `flutter_bloc` (Cubit), `get_it` + `injectable`. One Cubit per feature, `@injectable`.
+- `BaseState<T>` / `PaginatedState<T>` with `.when()` matching. (The generated auth cubit uses the `StatusState` enum directly; migrate to `BaseState` if you prefer.)
+- Mixins: `PaginationMixin`, `CancelRequestMixin` (only for non-Firebase async work), `SafeEmitMixin`.
+- Firestore streams: subscribe in the cubit, cancel the `StreamSubscription` in `close()`.
+
+### Thin page rule (Al Faris)
+
+Pages contain no UI logic. DI goes through `AutoRouteWrapper` + `InjectedBlocProvider`, never inside `build()`.
+
+```dart
+@RoutePage()
+class LoginPage extends StatelessWidget implements AutoRouteWrapper {
+  const LoginPage({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    return InjectedBlocProvider<AuthCubit>(child: this);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(child: LoginBody()),
+    );
+  }
+}
+```
+
+Rules:
+- No private `_XxxView` classes in `pages/`. UI lives in public `*Body` / panel widgets under `widgets/`.
+- Multi-step flows use `*FlowBody`.
+- Non-widget logic (camera session, share, CSV parsing, export, validators, state handlers) goes in `view/utils/`.
+- Never `BlocProvider(create: ...)` that bypasses GetIt.
+- Page size target: roughly 60 lines or fewer.
+
+### Cubit `part` split (large cubits)
+
+`AttendanceCubit` will grow quickly. Keep one `@injectable` façade and split by concern:
+
+```dart
+// attendance_cubit.dart
+part 'attendance_cubit_scan.dart';
+part 'attendance_cubit_manual.dart';
+part 'attendance_cubit_live.dart';
+
+@injectable
+class AttendanceCubit extends Cubit<AttendanceState> with SafeEmitMixin {
+  AttendanceCubit(this._scanQr, this._manualCheckIn, this._watchAttendance)
+      : super(const AttendanceState());
+  final ScanStudentQrUseCase _scanQr;
+  final ManualCheckInUseCase _manualCheckIn;
+  final WatchSessionAttendanceUseCase _watchAttendance;
+  StreamSubscription? _sub;
+}
+
+// attendance_cubit_scan.dart
+part of 'attendance_cubit.dart';
+
+extension AttendanceCubitScan on AttendanceCubit {
+  Future<void> onQrScanned(String token, Session session) async { /* ... */ }
+}
+```
+
+Split only when a cubit passes roughly 150-200 lines (`AuthCubit` stays a single file).
+
+### Params (SRP)
+- `PaginationParams` = page + limit only.
+- Filters embed it: `SessionAttendanceParams(sessionId, status, pagination)`, `ProgramsParams(type, pagination)`.
+- Keep list-query params separate from get-by-id params (`ProgramsParams` vs `GetProgramByIdParams`) and from create/update bodies.
+
+---
+
+## 5. Data Layer Pattern (Firebase)
+
+- **No Dio / REST.** Data sources talk to `FirebaseAuth`, `FirebaseFirestore`, and `FirebaseFunctions` (all injected via `FirebaseModule`).
+- Repositories keep the same contract: they return `Result<T>` and wrap calls in a `_guard()` that maps Firebase exceptions to failures carrying a `LocaleKeys` key (see `AuthRepositoryImpl`).
+- Firestore paths live in `FirestorePaths` (constants) so collection names are never typed twice.
+- Reads that drive UI use streams (`snapshots(includeMetadataChanges: true)`); one-shot reads use `get()`.
 
 ### Firestore layout
 
 ```
 users/{uid}
-  name, email, role: "admin" | "student", createdAt
+  email, role: "student" | "admin", createdAt
 
 programs/{programId}
   type: "course" | "event" | "bootcamp"
-  title, description, location
-  startDate, endDate
-  ownerId, adminIds: []
-  inviteCode
+  title, description, location, startDate, endDate
+  ownerId, adminIds: [], inviteCode
 
 programs/{programId}/students/{studentId}
   name, joinedAt, status
 
 programs/{programId}/sessions/{sessionId}
-  title, startAt, endAt
-  status: "scheduled" | "open" | "closed"
-  lateAfterMinutes
+  title, startAt, endAt, status: "scheduled" | "open" | "closed", lateAfterMinutes
 
 programs/{programId}/sessions/{sessionId}/attendance/{sessionId_studentId}
   studentId, scannedAt, scannedBy
   method: "qr" | "manual" | "self"
   status: "present" | "late" | "absent" | "excused"
-  deviceId, syncedAt
+  deviceId, flagged (bool, set by server validation)
+
+instructorInvites/{code}     # Cloud Functions only
+  used, usedBy, expiresAt
 ```
 
-### Local (if using Drift)
+### Cloud Functions
+
+| Function | Type | Purpose |
+|---|---|---|
+| `onUserCreated` | Auth trigger | Set `role: student` claim and create `users/{uid}` |
+| `redeemInstructorCode` | Callable | Validate single-use code, set `role: admin` claim |
+| `joinProgram` | Callable | Validate invite code, enroll the student |
+| `issueCredential` | Callable | Sign `{sid, pid, iat, exp}` with the Ed25519 private key, return the QR token |
+| `onAttendanceCreated` | Firestore trigger | Server-side validation: student enrolled, timestamp inside the session window; sets `flagged` |
+| `sendReminders` | Scheduled | FCM reminders before sessions |
+| `exportReport` | Callable (optional) | Generate Excel/PDF for large programs |
+
+The signing private key lives in **Secret Manager**, never in the app.
+
+### Adding a new feature query
+1. Path helper in `FirestorePaths`
+2. Model in `data/models/` with `fromFirestore` / `toFirestore`
+3. Abstract repo in `domain/repositories/` (`abstract interface class`)
+4. Data source (contract in `api/datasources/`, impl in `data/datasources/`)
+5. Repository impl with `_guard()`
+6. Use case in `domain/use_cases/`
+7. Inject into the cubit; add a Firestore index in `firestore.indexes.json` if the query needs one
+
+---
+
+## 6. Local Storage & Offline
+
+| Package / feature | Used For |
+|---|---|
+| Firestore offline persistence | Roster, sessions, and queued attendance writes (enabled at startup, unlimited cache) |
+| `flutter_secure_storage` | Signed QR token, cached public key, secrets if TOTP is added |
+| `shared_preferences` | Role hint, settings, last sync info |
+| `drift` (optional) | Only if you later need a queue you can inspect or count independently of Firestore |
+
+Startup setting (in `main.dart`):
 
 ```dart
-class AttendanceRecords extends Table {
-  TextColumn get id => text()();                 // sessionId_studentId
-  TextColumn get sessionId => text()();
-  TextColumn get studentId => text()();
-  DateTimeColumn get scannedAt => dateTime()();
-  TextColumn get method => text()();             // qr | manual | self
-  TextColumn get status => text()();             // present | late
-  BoolColumn get synced => boolean().withDefault(const Constant(false))();
+FirebaseFirestore.instance.settings = const Settings(
+  persistenceEnabled: true,
+  cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+);
+```
 
-  @override
-  Set<Column> get primaryKey => {id};
-}
+- Attendance writes use the deterministic ID `sessionId_studentId`, so retries and double syncs can never create duplicates.
+- `snapshots(includeMetadataChanges: true)` exposes `metadata.hasPendingWrites` per document; use it to drive `PendingSyncBadge`.
+- Keys in `lib/core/utils/constants/app_cache_keys.dart`.
+- Sign-out wipes: signed token, public key, cached user, and calls `FirebaseFirestore.instance.clearPersistence()` (after warning about pending writes; `clearPersistence` needs the Firestore instance to be idle).
+
+---
+
+## 7. DI Registration
+
+Standard GetIt + injectable setup (`@InjectableInit`, `@injectable` for cubits and use cases, `@lazySingleton` for helpers and Firebase instances, `@preResolve` for SharedPreferences and UserHelper). Rebuild with:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 ---
 
-## 8. Key Code Sketches
+## 8. Localization
 
-### 8.1 Verify a student QR offline (Dart, `cryptography` package)
+- `easy_localization`, files `ar-EG.json` and `en-US.json`, primary locale Arabic.
+- **Never hardcode strings**; use `LocaleKeys.section_key.tr()`.
+- Failures carry `LocaleKeys` keys; the UI translates with `.tr()`.
+- Regenerate keys:
 
-```dart
-import 'dart:convert';
-import 'package:cryptography/cryptography.dart';
+```bash
+flutter pub run easy_localization:generate -S assets/localization -O lib/core/languages -f keys -o locale_keys.g.dart
+```
 
-class TokenVerifier {
-  TokenVerifier(this._publicKeyBytes);
-  final List<int> _publicKeyBytes;
-  final _algo = Ed25519();
+---
 
-  Future<Map<String, dynamic>?> verify(String token) async {
-    final parts = token.split('.');
-    if (parts.length != 2) return null;
+## 9. Auth Design
 
-    final payloadBytes = base64Url.decode(base64Url.normalize(parts[0]));
-    final sigBytes = base64Url.decode(base64Url.normalize(parts[1]));
+| Topic | Choice | Why |
+|---|---|---|
+| Sign-in methods | Email + password, Google | Fast to build, no SMS cost. Phone OTP can come later. |
+| Roles | `student` (default), `admin` | Roles can't be picked at sign-up. |
+| Becoming admin | Instructor invite code (`redeemInstructorCode` callable) | Owner generates a single-use, expiring code. |
+| Role storage | Firebase custom claims, mirrored in `users/{uid}` | Security rules read the role without extra reads. |
+| Session | Firebase Auth persisted session | User stays logged in offline; `getIdTokenResult()` returns the cached token. |
+| Display name | Firebase Auth `displayName` | Avoids a race with the async `onUserCreated` function. |
 
-    final ok = await _algo.verify(
-      payloadBytes,
-      signature: Signature(
-        sigBytes,
-        publicKey: SimplePublicKey(_publicKeyBytes, type: KeyPairType.ed25519),
-      ),
-    );
-    if (!ok) return null;
+Flow:
 
-    final payload = jsonDecode(utf8.decode(payloadBytes)) as Map<String, dynamic>;
-    final exp = payload['exp'] as int;
-    if (DateTime.now().millisecondsSinceEpoch ~/ 1000 > exp) return null;
-    return payload;
-  }
+```
+Splash → session? ─ no ──→ Login ⇄ Register → Forgot password
+            │
+           yes → read role claim → admin shell | student shell
+                                        └─ student, no programs → "Join with code"
+```
+
+Becoming an instructor: register (starts as student) → Settings → "Activate instructor access" → enter code → function validates and sets the claim → app force-refreshes the token → route to Admin shell.
+
+Feature layout (delivered as `attendance_auth_feature.zip`):
+
+```
+features/auth/
+├── api/datasources/auth_remote_data_source.dart
+├── data/
+│   ├── datasources/auth_remote_data_source_impl.dart   # FirebaseAuth + Functions + Google
+│   └── repositories/auth_repository_impl.dart          # _guard() → LocaleKeys failures
+├── domain/
+│   ├── entities/app_user.dart
+│   ├── repositories/auth_repository.dart
+│   └── use_cases/  sign_in, sign_in_with_google, register, send_password_reset,
+│                   redeem_instructor_code, get_current_user, sign_out
+└── presentation/
+    ├── view_model/cubit/  auth_cubit.dart, auth_state.dart
+    └── view/
+        ├── pages/    login, register, forgot_password, redeem_instructor_code (all thin)
+        ├── widgets/  *_body widgets, google_sign_in_button
+        └── utils/    auth_validators.dart, auth_state_handler.dart
+```
+
+Security notes:
+- Never trust a role sent from the client. Only custom claims and server checks count.
+- Invite codes are single-use, random (8+ characters), and expire (for example 7 days).
+- Login errors map `user-not-found`, `wrong-password`, and `invalid-credential` to one message.
+- Forgot password shows the same success message whether or not the email exists.
+- Use `forceRefresh: true` only right after sign-in or redeem. Never force a refresh while offline.
+- Optional for admins: `local_auth` (biometric) to reopen the app, since their phone holds student data.
+
+---
+
+## 10. Offline QR Attendance
+
+### Primary: Method A (student QR, admin scans)
+1. On enroll (online), `issueCredential` signs `{sid, pid, iat, exp}` with an Ed25519 private key. Token: `base64url(payload).base64url(signature)`.
+2. Student app caches the token in secure storage and renders it in `QrCard`. Works offline.
+3. Admin app caches the public key (from `.env` or a callable) and keeps the session roster in the Firestore cache (open the session once while online).
+4. Admin scans, verifies the signature offline (`core/crypto`), checks program, expiry, and roster, then writes `attendance/{sessionId_studentId}` with Firestore. With no connection the write is queued automatically.
+5. When the connection returns, Firestore uploads the queue on its own. `onAttendanceCreated` validates on the server and flags anything suspicious.
+
+### Secondary
+- **Method C (manual check-in):** admin ticks students in the live list, same write path with `method: "manual"`.
+- **Method B (rotating session QR, student scans):** phase 3. A Cloud Function validates the code.
+
+### Rules and sync
+- One record per `(sessionId, studentId)`; first scan wins (a second QR write to an existing document is rejected by rules; only `method: "manual"` edits are allowed after creation).
+- Timestamps outside the session window are flagged by `onAttendanceCreated`, not silently accepted.
+- `PendingSyncBadge` shows documents where `metadata.hasPendingWrites` is true.
+- Admins should go online once before the event to cache token, public key, and roster.
+
+### Scan feedback
+Full-screen flash: green (present), amber (late), red (invalid / not enrolled / duplicate), with icon and text.
+
+### Firestore rules (sketch)
+
+```
+function isSignedIn() { return request.auth != null; }
+function isAdmin() { return isSignedIn() && request.auth.token.role == "admin"; }
+
+match /users/{uid} {
+  allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+  allow update: if isSignedIn() && request.auth.uid == uid
+    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["role"]);
+  allow create, delete: if false;
 }
-```
 
-### 8.2 Scan use case (domain layer)
+match /instructorInvites/{code} { allow read, write: if false; }
 
-```dart
-class ScanStudentQr {
-  ScanStudentQr(this._verifier, this._repo);
-  final TokenVerifier _verifier;
-  final AttendanceRepository _repo;
-
-  Future<ScanResult> call({required String token, required Session session}) async {
-    final payload = await _verifier.verify(token);
-    if (payload == null) return ScanResult.invalid;
-    if (payload['pid'] != session.programId) return ScanResult.wrongProgram;
-
-    final studentId = payload['sid'] as String;
-    if (!await _repo.isEnrolled(session.programId, studentId)) {
-      return ScanResult.notEnrolled;
-    }
-
-    final id = '${session.id}_$studentId';
-    if (await _repo.exists(id)) return ScanResult.alreadyScanned;
-
-    final now = DateTime.now();
-    final late = now.isAfter(session.startAt.add(Duration(minutes: session.lateAfterMinutes)));
-    await _repo.save(AttendanceRecord(
-      id: id,
-      sessionId: session.id,
-      studentId: studentId,
-      scannedAt: now,
-      method: 'qr',
-      status: late ? 'late' : 'present',
-    ));
-    return late ? ScanResult.late : ScanResult.present;
-  }
-}
-```
-
-### 8.3 Issue a credential (Cloud Function, Node.js)
-
-```js
-const crypto = require("crypto");
-const b64u = (b) => Buffer.from(b).toString("base64url");
-
-function issueToken(studentId, programId, privateKeyPem) {
-  const payload = JSON.stringify({
-    v: 1,
-    sid: studentId,
-    pid: programId,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
-  });
-  const sig = crypto.sign(null, Buffer.from(payload), privateKeyPem); // Ed25519
-  return `${b64u(payload)}.${b64u(sig)}`;
-}
-```
-
-Store the private key in **Secret Manager**, never in the app.
-
-### 8.4 Firestore security rules (sketch)
-
-```
 match /programs/{pid}/sessions/{sid}/attendance/{aid} {
-  allow read: if isProgramAdmin(pid)
-              || (isSignedIn() && resource.data.studentId == request.auth.uid);
-  allow create, update: if isProgramAdmin(pid);
+  allow read: if isAdmin()
+    || (isSignedIn() && resource.data.studentId == request.auth.uid);
+  allow create: if isAdmin() && request.resource.data.scannedBy == request.auth.uid;
+  allow update: if isAdmin() && request.resource.data.method == "manual";
   allow delete: if false;
 }
 ```
 
+Also restrict program and session writes to that program's `adminIds`.
+
 ---
 
-## 9. Screens
+## 11. Conventions & Rules
 
-**Shared:** Splash, Login/Register, Role redirect, Profile/Settings
+### Naming
+Files `snake_case.dart`, classes `PascalCase`, variables and functions `camelCase`, constants `camelCase`.
 
-**Admin**
-1. Programs list
-2. Create/Edit program
-3. Program details (sessions, students, reports tabs)
-4. Session details, **Scanner screen** (camera + live counter + last scanned student)
-5. Live attendance list (search, manual edit)
-6. Enroll students (add, CSV, invite)
+### Code style
+- Repositories return `Result<T>` (through `_guard()` for Firebase calls).
+- Cubits use `BaseState<T>` (or `StatusState`) with `.when()` or switch patterns.
+- Domain repositories are `abstract interface class`; use cases are callable classes.
+- Thin pages, public bodies, `view/utils` for non-widget logic (see §4).
+
+### Design rules: NEVER / ALWAYS
+- **NEVER** raw colors, raw `TextStyle`, or hardcoded strings.
+- **ALWAYS** handle loading, error, and empty states.
+- **ALWAYS** use `CustomToast` for feedback, `AppLoadingDialog` for blocking work, `CustomCachedImage` for network images.
+- **ALWAYS** cancel Firestore stream subscriptions in the cubit's `close()`.
+- **ALWAYS** render the QR black on white.
+- **NEVER** put the signing private key, or any secret, in the app or in `.env`.
+
+---
+
+## 12. Key Dependencies
+
+| Package | Purpose |
+|---|---|
+| `flutter_bloc` | State management (Cubit) |
+| `get_it`, `injectable` | DI |
+| `auto_route` | Routing |
+| `easy_localization` | i18n / l10n |
+| `flutter_screenutil` | Responsive sizing |
+| `flutter_secure_storage` | Encrypted signed token and public key |
+| `shared_preferences` | Key-value persistence |
+| `cached_network_image` | Image caching |
+| `equatable` | Value equality |
+| `flutter_dotenv` | Environment variables (public key) |
+| `toastification` | Toasts |
+| `firebase_core` | Firebase platform |
+| `firebase_auth` | Authentication |
+| `cloud_firestore` | Database with offline persistence |
+| `cloud_functions` | Callable functions |
+| `firebase_messaging` | Push notifications |
+| `google_sign_in` (7.x) | Google sign-in |
+| `mobile_scanner` | QR scanning |
+| `qr_flutter` | QR rendering |
+| `cryptography` | Ed25519 signature verification |
+| `connectivity_plus` | Show online/offline state |
+| `screen_brightness` | Max brightness on the student QR screen |
+| `excel`, `pdf`, `share_plus`, `csv`, `file_picker` | Reports and CSV import |
+| `local_auth` (optional) | Biometric re-open for admin devices |
+| `drift` (optional) | Independent offline queue, only if needed |
+
+**Dev:** `auto_route_generator`, `build_runner`, `injectable_generator`, `flutter_launcher_icons`, `flutter_lints`
+
+---
+
+## 13. Environment & Configuration
+
+- Firebase config comes from `firebase_options.dart` (`flutterfire configure`), and `google-services.json` / `GoogleService-Info.plist`.
+- `.env` via `flutter_dotenv` (listed under `pubspec.yaml` assets, and in `.gitignore`).
+
+Keys (names only):
+- `QR_PUBLIC_KEY` — Ed25519 public key (base64) used to verify student QR codes offline
+
+The signing **private key** lives only in Secret Manager for the Cloud Functions.
+
+Deploy:
+
+```bash
+firebase deploy --only functions,firestore:rules,firestore:indexes
+```
+
+---
+
+## 14. Agent Instructions
+
+### Building a new screen
+1. Create the feature folder with the full layer structure (or scaffold with the CLI if available).
+2. Thin page (`AutoRouteWrapper` + `InjectedBlocProvider`) plus a public `*Body` in `widgets/`.
+3. Cubit with the needed mixins; split with `part` files if it grows.
+4. Style only with `AppColors.*` and `num.bold/semiBold/medium/regular`.
+5. Register the route, then run build_runner.
+6. RTL by default.
+
+### Adding local data
+Small values go in SharedPreferences (or SecureStorage if sensitive). Anything that must sync goes through Firestore so offline persistence handles it. Add keys to `app_cache_keys.dart`.
+
+### Build order
+1. Firebase project, `flutterfire configure`, Auth providers, Firestore, Functions, rules
+2. Core: theme, DI (with `FirebaseModule`), `Result<T>`, localization, router
+3. Auth feature (see the zip) and role redirect
+4. Programs, sessions, enrollment (`joinProgram`, `issueCredential`)
+5. Student QR and admin scanner (offline) with `PendingSyncBadge`
+6. Manual check-in, live attendance list, `onAttendanceCreated` validation
 7. Reports and export
+8. Notifications, CSV import, late/absent rules
+9. Phase 3: rotating QR, self check-in, geofence, multi-organization
 
-**Student**
-1. My programs
-2. Program details and schedule
-3. **My QR** (large, high brightness, works offline)
-4. Attendance history and percentage
-5. Notifications
-
----
-
-## 10. Packages
-
-| Purpose | Package |
-|---|---|
-| QR scan | `mobile_scanner` |
-| QR generate | `qr_flutter` |
-| State management | `flutter_bloc` |
-| DI | `get_it`, `injectable` |
-| Firebase | `firebase_core`, `firebase_auth`, `cloud_firestore`, `cloud_functions`, `firebase_messaging` |
-| Crypto | `cryptography` |
-| Secure storage | `flutter_secure_storage` |
-| Connectivity | `connectivity_plus` |
-| Local DB (if needed) | `drift` |
-| Reports | `excel`, `pdf`, `printing`, `share_plus` |
-| CSV import | `csv`, `file_picker` |
-| Screen brightness | `screen_brightness` (for the student QR) |
+### Open decisions
+- Single organization or multi-tenant?
+- Small groups (scan one by one) or large events (100+)?
+- Instant confirmation (Method A only) or delayed self check-in (Method B) too?
+- Is Firestore's built-in offline queue enough, or do you need Drift for an inspectable queue?
 
 ---
 
-## 11. Security Checklist
-
-- [ ] Private signing key only on the server (Secret Manager)
-- [ ] Public key bundled/cached in the admin app
-- [ ] Credentials have an expiry and are revocable (refresh on re-enroll)
-- [ ] One record per student per session (deterministic ID)
-- [ ] Attendance writes restricted to program admins (security rules)
-- [ ] Timestamps validated against the session window on sync
-- [ ] Roster and any secrets stored encrypted on the admin device
-- [ ] Rate limits on Cloud Functions
-
----
-
-## 12. Roadmap
-
-### Current slice (only this now)
-
-**Auth + minimal core from Al Faris user** — no programs, sessions, QR, or reports yet.
-
-**Source:** `D:\mdsoft project\al_faris_user`
-
-**Backend note:** Al Faris login is **phone + REST (Dio)**. Attendance uses the same Al Faris auth **UI/core**, but credentials are **email + password** on **Firebase Auth** (not phone, not Dio).
-
-#### Take from Al Faris (adapt into attendance `core/`)
-
-| Area | Files / folders |
-|---|---|
-| Theme | `core/theme/app_colors.dart`, `app_typography.dart`, `app_theme.dart`, `input_borders.dart` |
-| Auth UI widgets | `core/common/widgets/custom_button.dart`, `custom_text_field.dart`, `pass_text_field.dart`, `custom_toast.dart`, `app_status_bar_overlay.dart`, `app_loading_dialog.dart`, `loading_dialog_bloc_listener.dart` |
-| Validation | `core/config/validations/validations.dart` (email/password only; drop phone/OTP rules if unused) |
-| Shared chrome | `features/shared/widgets/app_logo.dart` (if assets exist / are copied) |
-| UI look of auth | Layout/patterns from `features/login` + `features/register` presentation widgets only |
-
-#### Keep in attendance (already / Firebase)
-
-- `features/auth` with Firebase: register, login, session restore, logout, `AuthUser`
-- `core/config` Firebase options for the attendance project
-- Light `get_it` DI for auth only
-- **Localization like Al Faris:** `easy_localization` + `assets/localization/{ar-EG,en-US}.json` + `LocaleKeys` (email copy, not phone)
-
-#### Do not take from Al Faris yet
-
-- Dio / `core/api` / end points / interceptors
-- Phone field, OTP, forget-password API, governorates/regions, location picker
-- Full `injectable` graph, `auto_route` app router, FCM / notification helpers
-- `UserHelper` token/secure-storage session (Firebase Auth owns the session)
-- Cart, stores, orders, profile product features
-
-**Done when:** user can register, sign in, stay signed in across restarts, and sign out with Al Faris–matching auth UI. Post-login screen is a placeholder until attendance features start.
-
-### Later (full product — not this slice)
-
-**Phase 1: MVP**
-1. Roles (`admin` / `student`) and role redirect
-2. Programs and sessions
-3. Enrollment (manual + invite code)
-4. Signed student QR + admin scanner (offline)
-5. Manual check-in and edit
-6. Basic attendance list
-
-**Phase 2**
-7. Reports and Excel/PDF export
-8. Push notifications and reminders
-9. CSV import
-10. Late/absent rules and attendance percentage
-
-**Phase 3**
-11. Rotating QR (anti-screenshot)
-12. Self check-in (Method B)
-13. Geofencing / PIN
-14. Multi-admin, multi-organization support
-15. Analytics dashboard
-
----
-
-## 13. Testing Checklist
-
-- [ ] Scan works in airplane mode, then syncs on reconnect
-- [ ] Same student scanned twice gives "already scanned"
-- [ ] Expired or tampered QR is rejected
-- [ ] QR from another program is rejected
-- [ ] Two admins scan the same student offline, one record after sync
-- [ ] Device clock changed gives flagged/rejected on sync
-- [ ] 100+ students scanned in quick succession stays smooth
-- [ ] App killed mid-scan, no data lost
-
----
-
-## 14. Open Decisions
-
-- Single organization or **multi-tenant** (multiple organizations using the same app)?
-- Small groups (scan one by one) or large events (100+ people, need fast entry)?
-- Do students need **instant confirmation** (Method A) or is self check-in with delayed confirmation (Method B) acceptable?
-- Languages: Arabic/English with RTL support?
-
----
-
-## 15. Design System & Education Color Palette
-
-A clean and trustworthy palette designed for education apps.
-
-### Brand Colors
-
-| Role | Hex | Use |
-|---|---|---|
-| Primary | `#4F46E5` (indigo) | Buttons, app bar, active states |
-| Primary dark | `#3730A3` | Pressed states, headers |
-| Primary light | `#E0E7FF` | Chips, selected items, card highlights |
-| Accent | `#06B6D4` (cyan) | Scan button, highlights, progress |
-
-### Light Theme
-
-| Role | Hex |
-|---|---|
-| Background | `#F8FAFC` |
-| Surface (cards) | `#FFFFFF` |
-| Text primary | `#0F172A` |
-| Text secondary | `#64748B` |
-| Border/divider | `#E2E8F0` |
-
-### Dark Theme
-
-| Role | Hex |
-|---|---|
-| Background | `#0B1020` |
-| Surface (cards) | `#151B2E` |
-| Text primary | `#E5E7EB` |
-| Text secondary | `#94A3B8` |
-| Primary (contrast) | `#818CF8` |
-
-### Attendance Status Colors
-
-| Status | Hex | Symbol / Icon |
-|---|---|---|
-| Present | `#16A34A` (green) | ✓ Present |
-| Late | `#F59E0B` (amber) | ⏱ Late |
-| Absent | `#DC2626` (red) | ✕ Absent |
-| Excused | `#0284C7` (blue) | ℹ Excused |
-| Pending sync / Offline | `#64748B` (slate) | ⟳ Pending |
-
-### Scanner & Accessibility Rules
-
-- **QR Display**: Always render the QR code black on white in both light and dark themes for optical scanner reliability.
-- **Scanner Result Feedback**: Flash the full screen green (present), amber (late), or red (absent/invalid) for 1 second for instant door feedback without having to read text.
-- **Color-Blind Accessibility**: Never rely on color alone; always pair status colors with distinctive symbols/icons and clear text labels.
-
+*Update this file whenever the architecture, conventions, or patterns change.*

@@ -1,52 +1,54 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+import '../../languages/locale_keys.g.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 
-/// Badge showing documents or records waiting to be synced with Firestore.
-/// Driven by `metadata.hasPendingWrites`.
 class PendingSyncBadge extends StatelessWidget {
   const PendingSyncBadge({
     super.key,
-    this.pendingCount,
-    this.isCompact = false,
+    required this.pendingCount,
   });
 
-  final int? pendingCount;
-  final bool isCompact;
+  final int pendingCount;
 
   @override
   Widget build(BuildContext context) {
-    if (isCompact) {
-      return Container(
-        width: 8,
-        height: 8,
-        decoration: const BoxDecoration(
-          color: AppColors.late,
-          shape: BoxShape.circle,
-        ),
-      );
-    }
+    final hasPending = pendingCount > 0;
+    final color = hasPending ? AppColors.late : AppColors.present;
+    final bgColor = hasPending ? AppColors.amberLight : AppColors.emeraldLight;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.amberLight,
+        color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.late.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.cloud_queue_rounded,
-            size: 13,
-            color: AppColors.late,
+          Icon(
+            hasPending
+                ? Icons.cloud_upload_outlined
+                : Icons.cloud_done_rounded,
+            size: 14,
+            color: color,
           ),
-          const SizedBox(width: 4),
-          Text(
-            pendingCount != null ? '$pendingCount pending' : 'Offline sync',
-            style: 11.bold.copyWith(color: AppColors.late),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              hasPending
+                  ? LocaleKeys.attendance_pending_sync.tr(
+                      namedArgs: {'count': pendingCount.toString()},
+                    )
+                  : LocaleKeys.attendance_all_synced.tr(),
+              style: 11.bold.copyWith(color: color),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

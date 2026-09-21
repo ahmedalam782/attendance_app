@@ -1,6 +1,7 @@
 import '../../../../core/api/base_response/result.dart';
 import '../models/auth_user.dart';
 import '../params/login_params.dart';
+import '../params/phone_auth_params.dart';
 import '../params/register_params.dart';
 
 abstract class AuthRepository {
@@ -10,7 +11,15 @@ abstract class AuthRepository {
 
   Future<Result<AuthUser>> register(RegisterParams params);
 
+  Future<Result<PhoneOtpDispatch>> sendPhoneOtp(PhoneAuthParams params);
+
+  Future<Result<AuthUser>> verifyPhoneOtp(PhoneOtpParams params);
+
   Future<Result<void>> logout();
 
   Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode});
+
+  Future<Result<AuthUser?>> getCurrentUser();
+
+  Future<Result<AuthUser>> redeemInstructorCode(String code);
 }

@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// Clean & trustworthy brand & education color system for Attendance App.
+/// Brand & education color system for Attendance App.
 abstract final class AppColors {
-  // Brand colors
-  static const Color primary = Color(0xff4F46E5); // Indigo
+  // Brand
+  static const Color primary = Color(0xff4F46E5);
   static const Color primaryDark = Color(0xff3730A3);
   static const Color primaryLight = Color(0xffE0E7FF);
-  static const Color accent = Color(0xff06B6D4); // Cyan
+  static const Color accent = Color(0xff06B6D4);
+  static const Color accentDark = Color(0xff0891B2);
+  static const Color onPrimary = originalWhite;
 
-  // Backward-compatible aliases
+  // Aliases
   static const Color primerColor = primary;
   static const Color primerColorDark = primaryDark;
   static const Color primaryAccent = accent;
 
-  // Gradients
   static const LinearGradient primerGradient = LinearGradient(
     colors: [primary, primaryDark],
     begin: Alignment.topCenter,
@@ -21,18 +22,18 @@ abstract final class AppColors {
   );
 
   static const LinearGradient modernPrimaryGradient = LinearGradient(
-    colors: [Color(0xff4F46E5), Color(0xff3730A3)],
+    colors: [primary, primaryDark],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xff06B6D4), Color(0xff0891B2)],
+    colors: [accent, accentDark],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Light theme tokens
+  // Light surfaces
   static const Color background = Color(0xffF8FAFC);
   static const Color backgroundLight = background;
   static const Color surface = Color(0xffFFFFFF);
@@ -40,35 +41,46 @@ abstract final class AppColors {
   static const Color textPrimary = Color(0xff0F172A);
   static const Color textSecondary = Color(0xff64748B);
   static const Color border = Color(0xffE2E8F0);
-  static const Color slate200 = border;
+
   static const Color slate50 = Color(0xffF8FAFC);
   static const Color slate100 = Color(0xffF1F5F9);
+  static const Color slate200 = border;
+  static const Color slate300 = Color(0xffCBD5E1);
   static const Color slate400 = Color(0xff94A3B8);
-  static const Color slate600 = Color(0xff64748B);
+  static const Color slate500 = Color(0xff64748B);
+  static const Color slate600 = Color(0xff475569);
+  static const Color slate700 = Color(0xff334155);
   static const Color slate800 = Color(0xff1E293B);
   static const Color slate900 = Color(0xff0F172A);
 
-  // Dark theme tokens
+  // Dark surfaces
   static const Color darkBackground = Color(0xff0B1020);
   static const Color darkSurface = Color(0xff151B2E);
+  static const Color darkBorder = slate800;
   static const Color darkTextPrimary = Color(0xffE5E7EB);
   static const Color darkTextSecondary = Color(0xff94A3B8);
   static const Color darkPrimary = Color(0xff818CF8);
 
-  // Attendance status colors
-  static const Color present = Color(0xff16A34A); // Green
-  static const Color late = Color(0xffF59E0B); // Amber
+  // Scanner chrome (navy — avoids green camera bleed)
+  static const Color scannerOverlay = darkBackground;
+  static const Color scannerFrame = Color(0xffA5B4FC);
+  static const Color scannerLaser = accent;
+  static const Color scannerOnOverlay = originalWhite;
+
+  // Attendance status
+  static const Color present = Color(0xff16A34A);
+  static const Color late = Color(0xffF59E0B);
   static const Color lateStatus = late;
-  static const Color absent = Color(0xffDC2626); // Red
-  static const Color excused = Color(0xff0284C7); // Blue
-  static const Color pendingSync = Color(0xff64748B); // Slate / offline
+  static const Color absent = Color(0xffDC2626);
+  static const Color excused = Color(0xff0284C7);
+  static const Color pendingSync = slate500;
   static const Color pending = pendingSync;
 
-  // QR always black on white, even in dark mode
+  // QR always black on white
   static const Color qrForeground = Color(0xff000000);
   static const Color qrBackground = Color(0xffffffff);
 
-  // Semantic status accents
+  // Soft status fills
   static const Color emerald = present;
   static const Color emeraldLight = Color(0xffECFDF5);
   static const Color amber = lateStatus;
@@ -76,13 +88,18 @@ abstract final class AppColors {
   static const Color cyanLight = Color(0xffECFEFF);
   static const Color redLight = Color(0xffFEF2F2);
   static const Color blueLight = Color(0xffF0F9FF);
+  static const Color indigoLight = primaryLight;
 
-  // Backward-compatible UI tokens
-  static const Color text = black04;
-  static const Color muted = grey99;
+  // Shadows / scrims
+  static Color get shadow => slate900.withValues(alpha: 0.06);
+  static Color get shadowStrong => slate900.withValues(alpha: 0.12);
+  static Color get scrim => darkBackground.withValues(alpha: 0.55);
+
+  // Legacy aliases (keep call sites compiling)
+  static const Color text = textPrimary;
+  static const Color muted = textSecondary;
   static const Color error = absent;
   static const Color white = originalWhite;
-
   static const Color originalWhite = Color(0xffffffff);
   static const Color originalBlack = Color(0xff000000);
   static const Color black04 = textPrimary;
@@ -90,7 +107,6 @@ abstract final class AppColors {
   static const Color black33 = Color(0xff333333);
   static const Color black1A = Color(0xff1A1A1A);
   static const Color black4B = Color(0xff4B4B4B);
-
   static const Color greyE0 = border;
   static const Color greyB5 = slate400;
   static const Color grey99 = textSecondary;
@@ -98,7 +114,6 @@ abstract final class AppColors {
   static const Color grey8A = Color(0xff8A8A8A);
   static const Color greyA1 = Color(0xffA1A1A1);
   static const Color greyB9 = Color(0xffB9B9B9);
-
   static const Color blue30 = Color(0xff306FDA);
   static const Color blue15 = Color(0xff155BBD);
   static const Color redDA = absent;

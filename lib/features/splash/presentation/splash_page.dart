@@ -1,13 +1,21 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/common/widgets/ambient_glow_background.dart';
+import '../../../core/common/widgets/offline_status_pill.dart';
+import '../../../core/dependency_injection/injectable_config.dart';
 import '../../../core/languages/locale_keys.g.dart';
+import '../../../core/routes/app_router.gr.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../auth/presentation/view_model/cubit/auth_cubit.dart';
+import '../../home/data/app_bootstrap_impl.dart';
 import '../../shared/widgets/app_logo.dart';
 
 /// Premium animated splash screen with atmospheric background glows,
 /// spring scale transitions, and localized branding copy.
+@RoutePage()
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -52,6 +60,31 @@ class _SplashPageState extends State<SplashPage>
     );
 
     _controller.forward();
+    _bootstrapAndNavigate();
+  }
+
+  Future<void> _bootstrapAndNavigate() async {
+    try {
+      final bootstrap = AppBootstrapImpl();
+      await Future.wait([
+        bootstrap.run(),
+        Future<void>.delayed(const Duration(milliseconds: 1400)),
+      ]);
+      if (!mounted) return;
+      final authCubit = getIt<AuthCubit>();
+      final user = await authCubit.checkSession();
+      if (!mounted) return;
+      if (user == null) {
+        context.router.replace(const AuthRoute());
+      } else if (user.isAdmin) {
+        context.router.replace(const AdminLayoutRoute());
+      } else {
+        context.router.replace(const StudentLayoutRoute());
+      }
+    } catch (_) {
+      if (!mounted) return;
+      context.router.replace(const AuthRoute());
+    }
   }
 
   @override
@@ -66,43 +99,7 @@ class _SplashPageState extends State<SplashPage>
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Ambient glowing backdrop orbs
-          Positioned(
-            top: -80,
-            right: -80,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.primary.withValues(alpha: 0.16),
-                    AppColors.primary.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -60,
-            left: -60,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.accent.withValues(alpha: 0.14),
-                    AppColors.accent.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Main branding center
+          const AmbientGlowBackground(variant: AmbientGlowVariant.splash),
           Center(
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -126,7 +123,7 @@ class _SplashPageState extends State<SplashPage>
                       Text(
                         context.tr(LocaleKeys.splash_subtitle),
                         textAlign: TextAlign.center,
-                        style: 14.medium.copyWith(
+                        style: 13.medium.copyWith(
                           color: AppColors.slate400,
                           letterSpacing: 0.2,
                         ),
@@ -148,37 +145,28 @@ class _SplashPageState extends State<SplashPage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 140,
-                    height: 3.5,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: const LinearProgressIndicator(
-                        backgroundColor: AppColors.slate200,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primerColor,
+                  Center(
+                    child: SizedBox(
+                      width: 140,
+                      height: 3.5,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: const LinearProgressIndicator(
+                          backgroundColor: AppColors.slate200,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primerColor,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: AppColors.present,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.tr(LocaleKeys.splash_offline_ready),
-                        style: 12.medium.copyWith(color: AppColors.slate400),
-                      ),
-                    ],
+                  const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: OfflineStatusPill(
+                      showSurface: false,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),

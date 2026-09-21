@@ -1,0 +1,358 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:toastification/toastification.dart';
+
+import '../../../../../core/common/widgets/custom_button.dart';
+import '../../../../../core/common/widgets/custom_toast.dart';
+import '../../../../../core/languages/locale_keys.g.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_typography.dart';
+import '../../../data/utils/csv_roster_parser.dart';
+import '../../../domain/entities/csv_student_entry.dart';
+import '../../view_model/cubit/enrollment_cubit.dart';
+import '../../view_model/cubit/enrollment_state.dart';
+
+class CsvImportSheet extends StatefulWidget {
+  const CsvImportSheet({
+    super.key,
+    required this.programId,
+  });
+
+  final String programId;
+
+  static Future<void> show(BuildContext context, {required String programId}) {
+    final cubit = context.read<EnrollmentCubit>();
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: cubit,
+        child: CsvImportSheet(programId: programId),
+      ),
+    );
+  }
+
+  @override
+  State<CsvImportSheet> createState() => _CsvImportSheetState();
+}
+
+class _CsvImportSheetState extends State<CsvImportSheet> {
+  String? _fileName;
+  List<CsvStudentEntry> _parsedStudents = [];
+  bool _isParsing = false;
+
+  int get _validCount => _parsedStudents.where((s) => s.isValid).length;
+  int get _invalidCount => _parsedStudents.where((s) => !s.isValid).length;
+
+  Future<void> _pickFile() async {
+    try {
+      setState(() => _isParsing = true);
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (files.isEmpty) {
+        setState(() => _isParsing = false);
+        return;
+      }
+
+      final file = files.first;
+      _fileName = file.name;
+
+      final bytes = await file.readAsBytes();
+      const parser = CsvRosterParser();
+      _parsedStudents = parser.parseBytes(bytes);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _isParsing = false);
+    }
+  }
+
+  Future<void> _submitImport() async {
+    if (_validCount == 0) return;
+
+    final imported = await context.read<EnrollmentCubit>().importStudentsFromCsv(
+          programId: widget.programId,
+          students: _parsedStudents,
+        );
+
+    if (!mounted) return;
+
+    if (imported > 0) {
+      Navigator.of(context).pop();
+      CustomToast(
+        context: context,
+        header: LocaleKeys.csv_import_import_success.tr(
+          namedArgs: {'count': imported.toString()},
+        ),
+        type: ToastificationType.success,
+      ).showToast();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.82,
+      padding: const EdgeInsets.only(top: 16),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.slate300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            LocaleKeys.csv_import_title.tr(),
+                            style: 18.bold.copyWith(color: AppColors.slate900),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            LocaleKeys.csv_import_subtitle.tr(),
+                            style: 12.medium.copyWith(color: AppColors.slate500),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _pickFile,
+                      icon: const Icon(Icons.upload_file_rounded, size: 16),
+                      label: Text(
+                        _fileName != null
+                            ? LocaleKeys.csv_import_change_file.tr()
+                            : LocaleKeys.csv_import_pick_file.tr(),
+                        style: 12.bold,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryLight,
+                        foregroundColor: AppColors.primary,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  LocaleKeys.csv_import_format_hint.tr(),
+                  style: 11.regular.copyWith(color: AppColors.slate400),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Counts summary bar (if file parsed)
+          if (_parsedStudents.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.slate100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.emeraldLight,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        LocaleKeys.csv_import_valid_count.tr(
+                          namedArgs: {'count': _validCount.toString()},
+                        ),
+                        style: 11.bold.copyWith(color: AppColors.present),
+                      ),
+                    ),
+                    if (_invalidCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.redLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          LocaleKeys.csv_import_invalid_count.tr(
+                            namedArgs: {'count': _invalidCount.toString()},
+                          ),
+                          style: 11.bold.copyWith(color: AppColors.absent),
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    if (_fileName != null)
+                      Text(
+                        _fileName!,
+                        style: 11.medium.copyWith(color: AppColors.slate500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 10),
+
+          // Preview List
+          Expanded(
+            child: _isParsing
+                ? const Center(child: CircularProgressIndicator())
+                : _parsedStudents.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.table_chart_outlined,
+                              size: 44,
+                              color: AppColors.slate300,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              LocaleKeys.csv_import_pick_file.tr(),
+                              style: 14.medium.copyWith(
+                                color: AppColors.slate500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
+                        itemCount: _parsedStudents.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final entry = _parsedStudents[index];
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardSurface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: entry.isValid
+                                    ? AppColors.slate200
+                                    : AppColors.absent.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  entry.isValid
+                                      ? Icons.check_circle_outline_rounded
+                                      : Icons.error_outline_rounded,
+                                  size: 18,
+                                  color: entry.isValid
+                                      ? AppColors.present
+                                      : AppColors.absent,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        entry.name.isNotEmpty
+                                            ? entry.name
+                                            : '(Empty name)',
+                                        style: 13.bold.copyWith(
+                                          color: entry.name.isNotEmpty
+                                              ? AppColors.slate900
+                                              : AppColors.absent,
+                                        ),
+                                      ),
+                                      Text(
+                                        entry.id.isNotEmpty
+                                            ? entry.id
+                                            : '(Empty ID)',
+                                        style: 11.medium.copyWith(
+                                          color: entry.id.isNotEmpty
+                                              ? AppColors.slate500
+                                              : AppColors.absent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!entry.isValid && entry.error != null)
+                                  Text(
+                                    entry.error == 'missing_name'
+                                        ? LocaleKeys.csv_import_missing_name.tr()
+                                        : LocaleKeys.csv_import_missing_id.tr(),
+                                    style: 10.bold.copyWith(
+                                      color: AppColors.absent,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+          ),
+
+          // Submit button
+          if (_parsedStudents.isNotEmpty && _validCount > 0)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: BlocBuilder<EnrollmentCubit, EnrollmentState>(
+                builder: (context, state) {
+                  return CustomButton(
+                    title: LocaleKeys.csv_import_submit_button.tr(
+                      namedArgs: {'count': _validCount.toString()},
+                    ),
+                    isLoading: state.isActionLoading,
+                    onTap: _submitImport,
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

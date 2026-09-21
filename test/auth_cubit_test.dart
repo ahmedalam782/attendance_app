@@ -6,6 +6,7 @@ import 'package:attendance_app/core/helper/logout_session.dart';
 import 'package:attendance_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:attendance_app/features/auth/domain/models/auth_user.dart';
 import 'package:attendance_app/features/auth/domain/params/login_params.dart';
+import 'package:attendance_app/features/auth/domain/params/phone_auth_params.dart';
 import 'package:attendance_app/features/auth/domain/params/register_params.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/forgot_password_use_case.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/login_use_case.dart';
@@ -35,6 +36,21 @@ class FakeAuthRepository implements AuthRepository {
       );
 
   @override
+  Future<Result<PhoneOtpDispatch>> sendPhoneOtp(PhoneAuthParams params) async =>
+      const Success(data: PhoneOtpSent('test-verification-id'));
+
+  @override
+  Future<Result<AuthUser>> verifyPhoneOtp(PhoneOtpParams params) async =>
+      Success(
+        data: AuthUser(
+          id: '1',
+          email: '',
+          phoneNumber: '+9647500000000',
+          name: params.name,
+        ),
+      );
+
+  @override
   Future<Result<void>> logout() async {
     logoutCalls++;
     return const Success();
@@ -43,6 +59,15 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<Result<void>> sendPasswordResetEmail(String email, {String? languageCode}) async =>
       const Success();
+
+  @override
+  Future<Result<AuthUser?>> getCurrentUser() async => const Success(data: null);
+
+  @override
+  Future<Result<AuthUser>> redeemInstructorCode(String code) async =>
+      const Success(
+        data: AuthUser(id: '1', email: 'test@elevate.com', role: 'admin'),
+      );
 }
 
 void main() {

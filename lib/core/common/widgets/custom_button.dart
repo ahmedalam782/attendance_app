@@ -42,33 +42,50 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(radius ?? 16);
     final disabled = onTap == null || isLoading;
+    final useGradient = isGradient && !isFilled && gradient != null;
+    final effectiveBorder = borderColor ?? AppColors.primerColor;
+    final solidBackground = backGroundColor ?? AppColors.cardSurface;
+    final labelColor = titleStyle?.color ??
+        (disabled
+            ? AppColors.grey99
+            : useGradient || !isFilled
+                ? AppColors.originalWhite
+                : AppColors.slate800);
 
     final button = ElevatedButton(
       onPressed: disabled ? null : onTap,
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
+      style: ButtonStyle(
+        elevation: const WidgetStatePropertyAll(0),
+        shadowColor: const WidgetStatePropertyAll(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
-        disabledBackgroundColor: AppColors.greyE0,
-        backgroundColor: isGradient || !isFilled
-            ? Colors.transparent
-            : backGroundColor,
-        foregroundColor: AppColors.originalWhite,
-        shadowColor: Colors.transparent,
-        elevation: 0,
-        side: BorderSide(
-          color: isFilled
-              ? (borderColor ?? AppColors.primerColor).withValues(alpha: 0.5)
-              : Colors.transparent,
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 15, horizontal: 16),
         ),
-        shape: RoundedRectangleBorder(borderRadius: borderRadius),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.greyE0;
+          }
+          return useGradient ? Colors.transparent : solidBackground;
+        }),
+        foregroundColor: WidgetStatePropertyAll(labelColor),
+        side: WidgetStatePropertyAll(
+          BorderSide(
+            color: isFilled
+                ? effectiveBorder.withValues(alpha: 0.55)
+                : Colors.transparent,
+          ),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: borderRadius),
+        ),
       ),
       child: isLoading
-          ? const SizedBox(
+          ? SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: AppColors.originalWhite,
+                color: labelColor,
               ),
             )
           : Row(
@@ -84,15 +101,7 @@ class CustomButton extends StatelessWidget {
                     title ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style:
-                        titleStyle ??
-                        16.bold.copyWith(
-                          color: disabled
-                              ? AppColors.grey99
-                              : isFilled
-                              ? (borderColor ?? AppColors.primerColor)
-                              : AppColors.originalWhite,
-                        ),
+                    style: (titleStyle ?? 14.bold).copyWith(color: labelColor),
                   ),
                 ),
               ],
@@ -100,7 +109,7 @@ class CustomButton extends StatelessWidget {
     );
 
     Widget result = button;
-    if (isGradient && gradient != null) {
+    if (useGradient) {
       result = Container(
         decoration: BoxDecoration(
           gradient: disabled ? null : gradient,
@@ -110,8 +119,7 @@ class CustomButton extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: (borderColor ?? AppColors.primerColor)
-                        .withValues(alpha: 0.28),
+                    color: AppColors.primerColor.withValues(alpha: 0.28),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
