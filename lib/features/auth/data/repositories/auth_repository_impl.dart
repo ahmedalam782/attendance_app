@@ -8,7 +8,6 @@ import '../../../../core/api/execute_firebase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/params/login_params.dart';
-import '../../domain/params/phone_auth_params.dart';
 import '../../domain/params/register_params.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../datasources/user_profile_remote_data_source.dart';
@@ -35,24 +34,6 @@ class AuthRepositoryImpl implements AuthRepository {
       executeFirebase(() async {
         final user = await _remote.register(params);
         await _syncProfileSafely(() => _profiles.createProfile(user));
-        return user;
-      });
-
-  @override
-  Future<Result<PhoneOtpDispatch>> sendPhoneOtp(PhoneAuthParams params) =>
-      executeFirebase(() async {
-        final dispatch = await _remote.sendPhoneOtp(params);
-        if (dispatch is PhoneOtpAutoVerified) {
-          await _syncProfileSafely(() => _profiles.syncProfile(dispatch.user));
-        }
-        return dispatch;
-      });
-
-  @override
-  Future<Result<AuthUser>> verifyPhoneOtp(PhoneOtpParams params) =>
-      executeFirebase(() async {
-        final user = await _remote.verifyPhoneOtp(params);
-        await _syncProfileSafely(() => _profiles.syncProfile(user));
         return user;
       });
 

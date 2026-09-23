@@ -8,11 +8,13 @@ import '../../../../../core/api/base_state/base_state.dart';
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
 import '../../../../../core/common/widgets/centered_scroll_body.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
+import '../../../../../core/common/widgets/custom_phone_field.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/pass_text_field.dart';
 import '../../../../../core/common/widgets/version_info.dart';
 import '../../../../../core/config/validations.dart';
 import '../../../../../core/dependency_injection/injectable_config.dart';
+import '../../../../../core/helper/extensions/phone_text_controller.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_icons.dart';
@@ -66,6 +68,7 @@ class _RegisterBody extends StatefulWidget {
 class _RegisterBodyState extends State<_RegisterBody> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
+  final _phone = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
@@ -73,6 +76,7 @@ class _RegisterBodyState extends State<_RegisterBody> {
   @override
   void dispose() {
     _name.dispose();
+    _phone.dispose();
     _email.dispose();
     _password.dispose();
     _confirmation.dispose();
@@ -84,6 +88,7 @@ class _RegisterBodyState extends State<_RegisterBody> {
     await context.read<AuthCubit>().register(
           RegisterParams(
             name: _name.text,
+            phone: _phone.fullPhoneNumber,
             email: _email.text,
             password: _password.text,
           ),
@@ -120,6 +125,7 @@ class _RegisterBodyState extends State<_RegisterBody> {
                       const SizedBox(height: 16),
                       RegisterFormCard(
                         nameController: _name,
+                        phoneController: _phone,
                         emailController: _email,
                         passwordController: _password,
                         confirmationController: _confirmation,
@@ -191,6 +197,7 @@ class RegisterFormCard extends StatelessWidget {
   const RegisterFormCard({
     super.key,
     required this.nameController,
+    required this.phoneController,
     required this.emailController,
     required this.passwordController,
     required this.confirmationController,
@@ -199,6 +206,7 @@ class RegisterFormCard extends StatelessWidget {
   });
 
   final TextEditingController nameController;
+  final TextEditingController phoneController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmationController;
@@ -247,6 +255,11 @@ class RegisterFormCard extends StatelessWidget {
             prefixSvg: AppIcons.iconsPerson,
             textInputAction: TextInputAction.next,
             validator: Validations.validateName,
+          ),
+          const SizedBox(height: 12),
+          CustomPhoneField(
+            key: const ValueKey('phone'),
+            controller: phoneController,
           ),
           const SizedBox(height: 12),
           CustomTextFormField(

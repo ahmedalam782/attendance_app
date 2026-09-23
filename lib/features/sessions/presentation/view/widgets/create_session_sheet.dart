@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
+import '../../../../../core/common/widgets/app_date_picker.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -21,14 +22,7 @@ class CreateSessionSheet extends StatefulWidget {
 
   static Future<bool?> show(BuildContext context, {required String programId}) {
     final cubit = context.read<SessionsCubit>();
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => BlocProvider.value(
+    return showAppSheet<bool>(context, builder: (_) => BlocProvider.value(
         value: cubit,
         child: CreateSessionSheet(programId: programId),
       ),
@@ -43,7 +37,7 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
 
-  late DateTime _sessionDate;
+  DateTime _sessionDate = DateTime.now();
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
   int _lateAfterMinutes = 15;
@@ -51,9 +45,8 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _sessionDate = DateTime(now.year, now.month, now.day);
-    _startTime = TimeOfDay(hour: now.hour, minute: 0);
+    final now = TimeOfDay.now();
+    _startTime = now;
     _endTime = TimeOfDay(hour: (now.hour + 2) % 24, minute: 0);
   }
 
@@ -64,7 +57,7 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _sessionDate,
       firstDate: DateTime.now().subtract(const Duration(days: 7)),
@@ -134,13 +127,7 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   Widget build(BuildContext context) {
     return BlocBuilder<SessionsCubit, SessionsState>(
       builder: (context, state) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 12,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
+        return AppSheetPadding(
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -148,16 +135,9 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SheetDragHandle(),
-                  const SizedBox(height: 16),
-                  Text(
-                    LocaleKeys.sessions_create_title.tr(),
-                    style: 20.bold.copyWith(color: AppColors.slate900),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    LocaleKeys.sessions_create_subtitle.tr(),
-                    style: 13.regular.copyWith(color: AppColors.slate400),
+                  AppSheetHeader(
+                    title: LocaleKeys.sessions_create_title.tr(),
+                    subtitle: LocaleKeys.sessions_create_subtitle.tr(),
                   ),
                   const SizedBox(height: 20),
 

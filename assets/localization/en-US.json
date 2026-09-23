@@ -50,7 +50,8 @@
     "create_button": "Create account",
     "already_have_account": "Already have an account?",
     "login": "Sign in",
-    "continue_with_phone": "Continue with phone"
+    "continue_with_phone": "Continue with phone",
+    "phone_hint": "Phone number (e.g. +201012345678)"
   },
   "phone_auth": {
     "title": "Phone sign-in",
@@ -98,6 +99,9 @@
     "session_expired": "The SMS code expired. Request a new one.",
     "quota_exceeded": "SMS quota exceeded. Try again later.",
     "missing_client_identifier": "Add this app's SHA fingerprint in Firebase Console.",
+    "code_already_used": "This invite code has already been redeemed. Request a new code from the admin.",
+    "invalid_invite_code": "Invalid or expired invite code.",
+    "already_instructor": "Your account is already activated as an instructor.",
     "unknown": "Something went wrong. Please try again."
   },
   "splash": {
@@ -107,6 +111,7 @@
   "home": {
     "verified_offline_pass": "✓ Verified Offline Pass",
     "verified_admin": "✓ Verified Admin",
+    "verified_instructor": "✓ Certified Instructor",
     "verified_attendee": "✓ Verified Attendee",
     "attendance": "Attendance",
     "sessions": "Sessions",
@@ -182,7 +187,8 @@
     "profile_unavailable": "Could not load profile",
     "join_with_code": "Join with Code",
     "qr_brightness_hint": "This code works offline. Increase screen brightness when presenting it to the instructor.",
-    "enter_portal": "Enter student portal"
+    "enter_portal": "Enter student portal",
+    "profile_phone": "Phone"
   },
   "programs": {
     "create_title": "Create Program",
@@ -324,7 +330,32 @@
     "or_scan_qr": "Or scan instructor invite QR",
     "qr_scan_instruction": "Point the camera at the instructor invite QR",
     "redeem_submit": "Activate Access",
-    "redeem_success": "Instructor access activated successfully!"
+    "redeem_success": "Instructor access activated successfully!",
+    "admin_invite_instructor_title": "Invite New Instructor",
+    "admin_invite_instructor_subtitle": "Generate an invite code and QR for new instructors",
+    "admin_create_invite_title": "Instructor Invite Code",
+    "admin_create_invite_subtitle": "Share this code or QR with the instructor to activate their account",
+    "admin_generate_new_code": "Generate New Code",
+    "admin_code_copied": "Instructor code copied to clipboard",
+    "admin_copy_code": "Copy Code",
+    "admin_share_code": "Share Code",
+    "admin_qr_display_instruction": "Show this QR code to the instructor to scan",
+    "admin_creating_code": "Generating code...",
+    "instructor_account_title": "Instructor Account",
+    "instructor_enter_portal": "Enter Instructor Portal",
+    "instructor_settings_title": "Instructor Settings",
+    "instructor_settings_subtitle": "Profile and account preferences",
+    "role_instructor": "Certified Instructor",
+    "role_admin": "System Administrator",
+    "invite_history_title": "Invite Codes History",
+    "invite_history_subtitle": "Track issued codes and redemption status",
+    "invite_status_active": "Available",
+    "invite_status_used": "Redeemed",
+    "invite_active_ready": "Active invite code ready to share",
+    "no_invites_yet": "No previous invite codes",
+    "invite_tab_code": "Invite Code & QR",
+    "invite_tab_history": "Codes History",
+    "invite_active_hint": "This code is active and ready to share without creating a new one."
   },
   "csv_import": {
     "title": "Import Students CSV",

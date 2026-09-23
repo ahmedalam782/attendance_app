@@ -13,6 +13,7 @@ class CustomToast {
     this.type = ToastificationType.success,
     this.isWeb = kIsWeb,
     this.primaryColor,
+    this.showProgressBar = true,
   });
 
   final BuildContext context;
@@ -21,6 +22,7 @@ class CustomToast {
   final Color? primaryColor;
   ToastificationType? type;
   final bool isWeb;
+  final bool showProgressBar;
 
   static ToastificationItem? _currentToast;
 
@@ -44,25 +46,48 @@ class CustomToast {
       type: type,
       closeOnClick: true,
       dragToClose: true,
-      showProgressBar: true,
+      showProgressBar: showProgressBar,
       showIcon: false,
+      sizeConstraints: const BoxConstraints(minHeight: 0),
+      closeButton: ToastCloseButton(
+        showType: CloseButtonShowType.always,
+        buttonBuilder: (context, onClose) => Center(
+          child: GestureDetector(
+            onTap: onClose,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
+              child: Icon(
+                Icons.close_rounded,
+                size: 16,
+                color: AppColors.black04.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       context: context,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(
         color: primaryColor ?? _colorByType(),
         width: 0.5,
       ),
       title: Text(
         header ?? '',
-        style: 13.semiBold.copyWith(color: AppColors.black04),
+        style: 11.medium.copyWith(
+          color: AppColors.black04,
+          height: 1.2,
+        ),
       ),
       description: description != null
           ? Text(
               description!,
-              style: 12.regular.copyWith(color: AppColors.grey99),
+              style: 10.regular.copyWith(color: AppColors.grey99),
             )
           : null,
-      autoCloseDuration: const Duration(seconds: 5),
+      autoCloseDuration: const Duration(seconds: 4),
     );
   }
 

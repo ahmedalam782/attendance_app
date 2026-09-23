@@ -41,6 +41,16 @@ service cloud.firestore {
         && get(userPath()).data.role == 'admin';
     }
 
+    function isInstructor() {
+      return isAuthenticated()
+        && exists(userPath())
+        && get(userPath()).data.role == 'instructor';
+    }
+
+    function isStaff() {
+      return isAppAdmin() || isInstructor() || isGlobalAdmin();
+    }
+
     function isValidEmail(email) {
       return email is string
         && email.size() >= 5
@@ -56,7 +66,7 @@ service cloud.firestore {
     }
 
     function isValidRole(role) {
-      return role is string && (role == 'student' || role == 'admin');
+      return role is string && (role == 'student' || role == 'admin' || role == 'instructor');
     }
 
     // True when the caller has role:'admin' in their Firebase custom claims
@@ -64,7 +74,7 @@ service cloud.firestore {
     function isGlobalAdmin() {
       return isAuthenticated()
         && request.auth.token != null
-        && request.auth.token.role == 'admin';
+        && (request.auth.token.role == 'admin' || request.auth.token.admin == true);
     }
 
     function hasValidIdentity(data) {
@@ -168,31 +178,31 @@ service cloud.firestore {
         && request.auth.uid == resource.data.ownerId;
 
       match /students/{studentId} {
-        allow read: if isAppAdmin()
+        allow read: if isStaff()
           || isProgramAdmin(programId)
           || request.auth.uid == studentId;
         allow create: if isAuthenticated()
-          && (request.auth.uid == studentId || isProgramAdmin(programId) || isAppAdmin());
-        allow update, delete: if isAppAdmin() || isProgramAdmin(programId);
+          && (request.auth.uid == studentId || isProgramAdmin(programId) || isStaff());
+        allow update, delete: if isStaff() || isProgramAdmin(programId);
       }
 
       match /sessions/{sessionId} {
-        allow read: if isAppAdmin() || isProgramMember(programId);
-        allow create, update, delete: if isAppAdmin() || isProgramAdmin(programId);
+        allow read: if isStaff() || isProgramMember(programId);
+        allow create, update, delete: if isStaff() || isProgramAdmin(programId);
 
         match /attendance/{attendanceId} {
-          allow read: if isAppAdmin()
+          allow read: if isStaff()
             || isProgramAdmin(programId)
             || (isAuthenticated() && resource.data.studentId == request.auth.uid);
           allow create: if (
-              (isAppAdmin() || isProgramAdmin(programId))
+              (isStaff() || isProgramAdmin(programId))
               && request.resource.data.scannedBy == request.auth.uid
             )
             || (isProgramStudent(programId)
                 && request.resource.data.method == 'self'
                 && request.resource.data.studentId == request.auth.uid
                 && request.resource.data.scannedBy == request.auth.uid);
-          allow update: if (isAppAdmin() || isProgramAdmin(programId))
+          allow update: if (isStaff() || isProgramAdmin(programId))
             && request.resource.data.method == 'manual';
           allow delete: if false;
         }
@@ -202,8 +212,7 @@ service cloud.firestore {
     // Required for collectionGroup('attendance') queries (student history & admin reports).
     // Nested path rules alone do not apply to collection group listens.
     match /{path=**}/attendance/{attendanceId} {
-      allow read: if isAppAdmin()
-        || isGlobalAdmin()
+      allow read: if isStaff()
         || (isAuthenticated()
           && resource.data.studentId == request.auth.uid)
         || (isAuthenticated()
@@ -212,11 +221,29 @@ service cloud.firestore {
     }
 
     match /instructorInvites/{code} {
-      // Admins can read invite codes (e.g. to display in a management UI).
-      // All writes are performed by Cloud Functions using the Admin SDK
-      // and are therefore not subject to client-side security rules.
-      allow read: if isGlobalAdmin();
-      allow write: if false;
+      // 1. Authenticated users can read invite codes (needed by students to validate & redeem)
+      allow read: if isAuthenticated();
+
+      // 2. ONLY authenticated admins can create new invite codes (Instructors cannot create invites)
+      allow create: if isAuthenticated()
+        && request.resource.data.used == false
+        && (isAppAdmin() || isGlobalAdmin())
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // 3. Updating an invite: either by admin or student redeeming unused invite
+      allow update: if isAuthenticated()
+        && (
+          isAppAdmin()
+          || isGlobalAdmin()
+          || (
+            resource.data.used == false
+            && request.resource.data.used == true
+            && request.resource.data.usedBy == request.auth.uid
+          )
+        );
+
+      // 4. ONLY admins can delete invite codes
+      allow delete: if isAppAdmin() || isGlobalAdmin();
     }
   }
 }

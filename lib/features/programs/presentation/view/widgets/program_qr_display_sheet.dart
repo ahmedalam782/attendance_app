@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/qr_card.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -21,13 +21,8 @@ class ProgramQrDisplaySheet extends StatelessWidget {
   final Program program;
 
   static Future<void> show(BuildContext context, {required Program program}) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+    return showAppSheet<void>(
+      context,
       builder: (_) => ProgramQrDisplaySheet(program: program),
     );
   }
@@ -44,28 +39,22 @@ class ProgramQrDisplaySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + bottomInset),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SheetDragHandle(),
-              const SizedBox(height: 16),
-              Text(
-                program.title,
-                style: 20.bold.copyWith(color: AppColors.slate900),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                LocaleKeys.programs_qr_display_subtitle.tr(),
-                style: 13.regular.copyWith(color: AppColors.slate400),
-                textAlign: TextAlign.center,
-              ),
+    return AppSheetPadding(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              program.title,
+              style: 20.bold.copyWith(color: AppColors.slate900),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              LocaleKeys.programs_qr_display_subtitle.tr(),
+              style: 13.regular.copyWith(color: AppColors.slate400),
+              textAlign: TextAlign.center,
+            ),
               const SizedBox(height: 20),
               QrCard(
                 title: program.title,
@@ -142,7 +131,6 @@ class ProgramQrDisplaySheet extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

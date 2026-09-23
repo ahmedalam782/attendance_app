@@ -9,6 +9,8 @@ abstract final class AppColors {
   static const Color accent = Color(0xff06B6D4);
   static const Color accentDark = Color(0xff0891B2);
   static const Color onPrimary = originalWhite;
+  static const Color pickerPurple = primary;
+  static const Color pickerPurpleLight = primaryLight;
 
   // Aliases
   static const Color primerColor = primary;

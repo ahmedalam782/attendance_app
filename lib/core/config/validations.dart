@@ -45,6 +45,16 @@ abstract final class Validations {
     return null;
   }
 
+  /// Simple E.164 phone validator for registration.
+  static String? validateSimplePhone(String? value) {
+    final phone = value?.trim() ?? '';
+    if (phone.isEmpty) return LocaleKeys.validations_phone_required.tr();
+    if (!phone.startsWith('+') || phone.length < 7) {
+      return LocaleKeys.validations_phone_invalid.tr();
+    }
+    return null;
+  }
+
   /// Al Faris phone local-number validation (country code separate).
   static String? validatePhoneNumber(
     String? value,

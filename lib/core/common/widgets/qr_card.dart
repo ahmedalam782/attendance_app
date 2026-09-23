@@ -17,6 +17,8 @@ class QrCard extends StatelessWidget {
     this.footerText,
     this.qrContent,
     this.size = 220,
+    this.actions,
+    this.headerWidget,
   });
 
   final String? token;
@@ -27,6 +29,8 @@ class QrCard extends StatelessWidget {
   final String? footerText;
   final Widget? qrContent;
   final double size;
+  final List<Widget>? actions;
+  final Widget? headerWidget;
 
   String get _displayTitle => title ?? studentName ?? 'Student Pass';
   String? get _displaySubtitle =>
@@ -52,17 +56,52 @@ class QrCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header info
-          Text(
-            _displayTitle,
-            style: 18.bold.copyWith(color: AppColors.slate900),
-            textAlign: TextAlign.center,
-          ),
-          if (_displaySubtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              _displaySubtitle!,
-              style: 12.medium.copyWith(color: AppColors.slate500),
+          if (headerWidget != null) ...[
+            headerWidget!,
+          ] else if (actions != null && actions!.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _displayTitle,
+                        style: 18.bold.copyWith(color: AppColors.slate900),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (_displaySubtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _displaySubtitle!,
+                          style: 12.medium.copyWith(color: AppColors.slate500),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: actions!,
+                ),
+              ],
             ),
+          ] else ...[
+            Text(
+              _displayTitle,
+              style: 18.bold.copyWith(color: AppColors.slate900),
+              textAlign: TextAlign.center,
+            ),
+            if (_displaySubtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                _displaySubtitle!,
+                style: 12.medium.copyWith(color: AppColors.slate500),
+              ),
+            ],
           ],
           const SizedBox(height: 18),
 

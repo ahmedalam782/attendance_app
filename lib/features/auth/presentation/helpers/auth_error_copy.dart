@@ -24,8 +24,16 @@ abstract final class AuthErrorCopy {
       LocaleKeys.auth_errors_invalid_verification_id.tr(),
     'session-expired' => LocaleKeys.auth_errors_session_expired.tr(),
     'quota-exceeded' => LocaleKeys.auth_errors_quota_exceeded.tr(),
-    'missing-client-identifier' =>
+    'missing_client_identifier' =>
       LocaleKeys.auth_errors_missing_client_identifier.tr(),
+    'code-already-used' ||
+    'already-exists' =>
+      LocaleKeys.auth_errors_code_already_used.tr(),
+    'invalid-invite-code' ||
+    'not-found' =>
+      LocaleKeys.auth_errors_invalid_invite_code.tr(),
+    'already-instructor' =>
+      LocaleKeys.auth_errors_already_instructor.tr(),
     _ => LocaleKeys.auth_errors_unknown.tr(),
   };
 }

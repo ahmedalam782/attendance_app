@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/qr_card.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/status_chip.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -17,27 +17,17 @@ class QrPassSheet extends StatelessWidget {
   final AuthUser user;
 
   static Future<void> show(BuildContext context, AuthUser user) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => QrPassSheet(user: user),
+    return showAppSheet<void>(context, builder: (_) => QrPassSheet(user: user),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+    return AppSheetPadding(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SheetDragHandle(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           StatusChip(
             status: AttendanceStatus.present,
             customLabel: LocaleKeys.home_verified_offline_pass.tr(),

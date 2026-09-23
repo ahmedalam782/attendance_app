@@ -18,6 +18,18 @@ Future<Result<T>> executeFirebase<T>(Future<T> Function() call) async {
     return Error<T>(
       exception: AuthFailure.fromFirebaseException(ex),
     );
+  } on FirebaseException catch (ex, stackTrace) {
+    if (kDebugMode) {
+      log('FirebaseException caught: $ex', stackTrace: stackTrace);
+    }
+    return Error<T>(
+      exception: AuthFailure(
+        code: ex.code,
+        errorMessage: ex.message?.trim().isNotEmpty == true
+            ? ex.message!
+            : ex.code,
+      ),
+    );
   } on Exception catch (ex, stackTrace) {
     if (kDebugMode) {
       log('Unexpected Firebase error: $ex', stackTrace: stackTrace);

@@ -50,7 +50,8 @@
     "create_button": "إنشاء حساب",
     "already_have_account": "لديك حساب؟",
     "login": "تسجيل الدخول",
-    "continue_with_phone": "المتابعة برقم الهاتف"
+    "continue_with_phone": "المتابعة برقم الهاتف",
+    "phone_hint": "رقم الهاتف (مثل +201012345678)"
   },
   "phone_auth": {
     "title": "تسجيل الدخول بالهاتف",
@@ -98,6 +99,9 @@
     "session_expired": "انتهت صلاحية رمز الرسالة. اطلب رمزاً جديداً.",
     "quota_exceeded": "تم تجاوز حد الرسائل. حاول لاحقاً.",
     "missing_client_identifier": "أضف بصمة SHA للتطبيق في وحدة تحكم Firebase.",
+    "code_already_used": "تم استخدام كود الدعوة هذا من قبل. اطلب كوداً جديداً من المشرف.",
+    "invalid_invite_code": "كود الدعوة غير صحيح أو غير موجود.",
+    "already_instructor": "حسابك مفعّل بالفعل بصلاحية مدرب.",
     "unknown": "حدث خطأ. حاول مجدداً."
   },
   "splash": {
@@ -107,6 +111,7 @@
   "home": {
     "verified_offline_pass": "✓ تصريح حضور موثّق دون اتصال",
     "verified_admin": "✓ مسؤول موثّق",
+    "verified_instructor": "✓ مدرب معتمد",
     "verified_attendee": "✓ حضور موثّق",
     "attendance": "الحضور",
     "sessions": "الجلسات",
@@ -182,7 +187,8 @@
     "profile_unavailable": "تعذر تحميل الملف الشخصي",
     "join_with_code": "الانضمام برمز",
     "qr_brightness_hint": "يعمل هذا الرمز دون اتصال بالإنترنت. يرجى رفع سطوع الشاشة عند إبراز الرمز للمشرف.",
-    "enter_portal": "الدخول إلى بوابة الطالب"
+    "enter_portal": "الدخول إلى بوابة الطالب",
+    "profile_phone": "رقم الهاتف"
   },
   "programs": {
     "create_title": "إنشاء برنامج جديد",
@@ -324,7 +330,32 @@
     "or_scan_qr": "أو مسح رمز دعوة المدرب",
     "qr_scan_instruction": "وجّه الكاميرا نحو رمز دعوة المدرب",
     "redeem_submit": "تفعيل الصلاحيات",
-    "redeem_success": "تم تفعيل صلاحيات المدرب بنجاح!"
+    "redeem_success": "تم تفعيل صلاحيات المدرب بنجاح!",
+    "admin_invite_instructor_title": "دعوة مدرب جديد",
+    "admin_invite_instructor_subtitle": "إنشاء كود دعوة ورمز QR للمدربين الجدد",
+    "admin_create_invite_title": "كود دعوة مدرب",
+    "admin_create_invite_subtitle": "شارك هذا الكود أو رمز QR مع المدرب لتفعيل حسابه",
+    "admin_generate_new_code": "إنشاء كود جديد",
+    "admin_code_copied": "تم نسخ كود المدرب إلى الحافظة",
+    "admin_copy_code": "نسخ الكود",
+    "admin_share_code": "مشاركة الكود",
+    "admin_qr_display_instruction": "اعرض هذا الرمز للمدرب لمسحه من تطبيقه",
+    "admin_creating_code": "جاري إنشاء الكود...",
+    "instructor_account_title": "حساب المدرب",
+    "instructor_enter_portal": "الدخول إلى بوابة المدرب",
+    "instructor_settings_title": "إعدادات المدرب",
+    "instructor_settings_subtitle": "الملف الشخصي وتفضيلات الحساب",
+    "role_instructor": "مدرب معتمد",
+    "role_admin": "مسؤول النظام",
+    "invite_history_title": "سجل أكواد الدعوة",
+    "invite_history_subtitle": "متابعة الأكواد الصادرة وحالة استخدامها",
+    "invite_status_active": "متاح للاستخدام",
+    "invite_status_used": "تم الاستخدام",
+    "invite_active_ready": "كود دعوة نشط وجاهز للمشاركة",
+    "no_invites_yet": "لا توجد أكواد دعوة سابقة",
+    "invite_tab_code": "كود الدعوة والـ QR",
+    "invite_tab_history": "سجل الأكواد",
+    "invite_active_hint": "هذا الكود نشط حالياً وجاهز للمشاركة دون الحاجة لإنشاء كود جديد."
   },
   "csv_import": {
     "title": "استيراد قائمة الطلاب من ملف CSV",

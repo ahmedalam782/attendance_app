@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_typography.dart';
 import '../../view_model/cubit/enrollment_cubit.dart';
 import '../../view_model/cubit/enrollment_state.dart';
 
@@ -22,10 +21,8 @@ class AddStudentSheet extends StatefulWidget {
 
   static Future<void> show(BuildContext context, {required String programId}) {
     final cubit = context.read<EnrollmentCubit>();
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showAppSheet(
+      context,
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: AddStudentSheet(programId: programId),
@@ -72,37 +69,15 @@ class _AddStudentSheetState extends State<AddStudentSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        top: 20,
-        left: 20,
-        right: 20,
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return AppSheetPadding(
       child: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.slate300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              LocaleKeys.roster_add_student.tr(),
-              style: 18.bold.copyWith(color: AppColors.slate900),
+            AppSheetHeader(
+              title: LocaleKeys.roster_add_student.tr(),
             ),
             const SizedBox(height: 16),
             CustomTextFormField(

@@ -30,5 +30,17 @@ abstract class GlobalRoutes {
       transitionsBuilder: TransitionsBuilders.slideLeftWithFade,
       duration: const Duration(milliseconds: 350),
     ),
+    CustomRoute(
+      page: InstructorInviteCodeRoute.page,
+      path: AppRoutes.instructorInviteCode,
+      transitionsBuilder: TransitionsBuilders.slideLeftWithFade,
+      duration: const Duration(milliseconds: 350),
+    ),
+    CustomRoute(
+      page: InstructorInvitesHistoryRoute.page,
+      path: AppRoutes.instructorInvitesHistory,
+      transitionsBuilder: TransitionsBuilders.slideLeftWithFade,
+      duration: const Duration(milliseconds: 350),
+    ),
   ];
 }

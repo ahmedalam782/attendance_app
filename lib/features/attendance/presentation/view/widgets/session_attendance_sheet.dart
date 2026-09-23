@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/empty_state_card.dart';
 import '../../../../../core/common/widgets/status_chip.dart';
@@ -42,10 +43,8 @@ class SessionAttendanceSheet extends StatefulWidget {
     final enrollmentCubit = context.read<EnrollmentCubit>();
     final attendanceCubit = context.read<AttendanceCubit>();
 
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showAppSheet(
+      context,
       builder: (_) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: enrollmentCubit),
@@ -79,31 +78,15 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
   void _onStudentTap(EnrolledStudent student, AttendanceRecord? existingRecord) {
     if (!widget.isAdmin) return;
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
+    showAppSheet<void>(
+      context,
       builder: (bottomSheetContext) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
+        return AppSheetPadding(
+          topExtra: 24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.slate300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
               Text(
                 student.name,
                 style: 16.bold.copyWith(color: AppColors.slate900),
@@ -279,25 +262,9 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      padding: const EdgeInsets.only(top: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      padding: const EdgeInsets.only(top: 20),
       child: Column(
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 38,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.slate300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
 
           // Header: Session info
           Padding(
@@ -316,7 +283,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${DateFormat('EEE, MMM d').format(widget.session.startAt)} • ${timeFormat.format(widget.session.startAt)}',
+                        '${DateFormat('EEE, MMM d').format(widget.session.startAt)} â€¢ ${timeFormat.format(widget.session.startAt)}',
                         style: 12.medium.copyWith(color: AppColors.slate500),
                       ),
                     ],
@@ -406,7 +373,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                             child: Row(
                               children: [
                                 Text(
-                                  '${students.length} students • ${unmarked.length} unmarked',
+                                  '${students.length} students â€¢ ${unmarked.length} unmarked',
                                   style: 12.medium.copyWith(
                                     color: AppColors.slate500,
                                   ),
@@ -502,7 +469,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                                           if (record != null) ...[
                                             const SizedBox(width: 6),
                                             Text(
-                                              '• ${DateFormat('h:mm a').format(record.scannedAt)}',
+                                              'â€¢ ${DateFormat('h:mm a').format(record.scannedAt)}',
                                               style: 11.regular.copyWith(
                                                 color: AppColors.slate400,
                                               ),

@@ -3,34 +3,33 @@ import 'package:equatable/equatable.dart';
 class RegisterParams extends Equatable {
   const RegisterParams({
     required this.name,
+    required this.phone,
     this.email = '',
     this.password = '',
-    this.phone,
   });
 
   final String name;
+
+  /// E.164 phone number, e.g. +201012345678.
+  final String phone;
+
   final String email;
   final String password;
 
-  /// E.164 phone when registering with phone OTP.
-  final String? phone;
-
-  bool get isPhone => phone != null && phone!.trim().isNotEmpty;
-
   Map<String, dynamic> toJson() => {
         'name': name,
+        'phone': phone,
         'email': email,
         'password': password,
-        if (phone != null) 'phone': phone,
       };
 
   factory RegisterParams.fromJson(Map<String, dynamic> json) => RegisterParams(
         name: json['name'] as String,
+        phone: json['phone'] as String? ?? '',
         email: json['email'] as String? ?? '',
         password: json['password'] as String? ?? '',
-        phone: json['phone'] as String?,
       );
 
   @override
-  List<Object?> get props => [name, email, password, phone];
+  List<Object?> get props => [name, phone, email, password];
 }

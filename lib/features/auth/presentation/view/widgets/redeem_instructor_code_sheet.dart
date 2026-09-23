@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
@@ -21,10 +22,8 @@ class RedeemInstructorCodeSheet extends StatefulWidget {
 
   static Future<void> show(BuildContext context) {
     final cubit = context.read<AuthCubit>();
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showAppSheet(
+      context,
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: const RedeemInstructorCodeSheet(),
@@ -83,45 +82,16 @@ class _RedeemInstructorCodeSheetState extends State<RedeemInstructorCodeSheet> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthStates>(
       builder: (context, state) {
-        return Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-            top: 20,
-            left: 20,
-            right: 20,
-          ),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
+        return AppSheetPadding(
           child: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.slate300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  LocaleKeys.settings_extra_instructor_code_sheet_title.tr(),
-                  style: 18.bold.copyWith(color: AppColors.slate900),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  LocaleKeys.settings_extra_instructor_code_sheet_desc.tr(),
-                  style: 13.regular.copyWith(
-                    color: AppColors.slate500,
-                    height: 1.4,
-                  ),
+                AppSheetHeader(
+                  title: LocaleKeys.settings_extra_instructor_code_sheet_title.tr(),
+                  subtitle: LocaleKeys.settings_extra_instructor_code_sheet_desc.tr(),
                 ),
                 const SizedBox(height: 18),
                 CustomTextFormField(

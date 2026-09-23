@@ -47,10 +47,6 @@ import '../../features/auth/domain/use_cases/login_use_case.dart' as _i1038;
 import '../../features/auth/domain/use_cases/redeem_instructor_code_use_case.dart'
     as _i418;
 import '../../features/auth/domain/use_cases/register_use_case.dart' as _i1010;
-import '../../features/auth/domain/use_cases/send_phone_otp_use_case.dart'
-    as _i728;
-import '../../features/auth/domain/use_cases/verify_phone_otp_use_case.dart'
-    as _i923;
 import '../../features/auth/firebase/datasources/firebase_auth_remote_data_source.dart'
     as _i613;
 import '../../features/auth/firebase/datasources/firestore_user_profile_remote_data_source.dart'
@@ -277,12 +273,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1010.RegisterUseCase>(
       () => _i1010.RegisterUseCase(gh<_i787.AuthRepository>()),
     );
-    gh.factory<_i728.SendPhoneOtpUseCase>(
-      () => _i728.SendPhoneOtpUseCase(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i923.VerifyPhoneOtpUseCase>(
-      () => _i923.VerifyPhoneOtpUseCase(gh<_i787.AuthRepository>()),
-    );
     gh.factory<_i686.CreateSessionUseCase>(
       () => _i686.CreateSessionUseCase(gh<_i374.SessionsRepository>()),
     );
@@ -322,6 +312,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i403.UpdateSessionStatusUseCase>(),
       ),
     );
+    gh.factory<_i96.ReportsCubit>(
+      () => _i96.ReportsCubit(
+        gh<_i853.GetProgramReportUseCase>(),
+        gh<_i848.ExportAttendanceCsvUseCase>(),
+      ),
+    );
     gh.factory<_i796.AuthCubit>(
       () => _i796.AuthCubit(
         gh<_i1038.LoginUseCase>(),
@@ -330,12 +326,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i897.ForgotPasswordUseCase>(),
         gh<_i129.GetCurrentUserUseCase>(),
         gh<_i418.RedeemInstructorCodeUseCase>(),
-      ),
-    );
-    gh.factory<_i96.ReportsCubit>(
-      () => _i96.ReportsCubit(
-        gh<_i853.GetProgramReportUseCase>(),
-        gh<_i848.ExportAttendanceCsvUseCase>(),
       ),
     );
     return this;

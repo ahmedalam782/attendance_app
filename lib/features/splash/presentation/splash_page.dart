@@ -76,7 +76,7 @@ class _SplashPageState extends State<SplashPage>
       if (!mounted) return;
       if (user == null) {
         context.router.replace(const AuthRoute());
-      } else if (user.isAdmin) {
+      } else if (user.isStaff) {
         context.router.replace(const AdminLayoutRoute());
       } else {
         context.router.replace(const StudentLayoutRoute());

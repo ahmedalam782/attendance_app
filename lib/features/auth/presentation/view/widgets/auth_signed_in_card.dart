@@ -84,93 +84,103 @@ class AuthSignedInCard extends StatelessWidget {
             status: AttendanceStatus.present,
             customLabel: user.isAdmin
                 ? LocaleKeys.home_verified_admin.tr()
-                : LocaleKeys.home_verified_attendee.tr(),
+                : (user.isInstructor
+                    ? LocaleKeys.home_verified_instructor.tr()
+                    : LocaleKeys.home_verified_attendee.tr()),
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: AuthMetricCard(
-                  title: LocaleKeys.home_attendance.tr(),
-                  value: '98%',
-                  accentColor: AppColors.present,
-                  icon: Icons.check_circle_outline,
+          if (!user.isStaff) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: AuthMetricCard(
+                    title: LocaleKeys.home_attendance.tr(),
+                    value: '98%',
+                    accentColor: AppColors.present,
+                    icon: Icons.check_circle_outline,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AuthMetricCard(
-                  title: LocaleKeys.home_sessions.tr(),
-                  value: '14/15',
-                  accentColor: AppColors.accent,
-                  icon: Icons.school_outlined,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AuthMetricCard(
+                    title: LocaleKeys.home_sessions.tr(),
+                    value: '14/15',
+                    accentColor: AppColors.accent,
+                    icon: Icons.school_outlined,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          InkWell(
-            onTap: () => QrPassSheet.show(context, user),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.slate50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.cyanLight,
-                      borderRadius: BorderRadius.circular(10),
+              ],
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => QrPassSheet.show(context, user),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.slate50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.cyanLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code_rounded,
+                        color: AppColors.accent,
+                        size: 20,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.qr_code_rounded,
-                      color: AppColors.accent,
-                      size: 20,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            LocaleKeys.home_qr_pass_title.tr(),
+                            style: 13.bold.copyWith(color: AppColors.textPrimary),
+                          ),
+                          Text(
+                            LocaleKeys.home_qr_pass_subtitle.tr(),
+                            style: 11.regular
+                                .copyWith(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          LocaleKeys.home_qr_pass_title.tr(),
-                          style: 13.bold.copyWith(color: AppColors.textPrimary),
-                        ),
-                        Text(
-                          LocaleKeys.home_qr_pass_subtitle.tr(),
-                          style: 11.regular
-                              .copyWith(color: AppColors.textSecondary),
-                        ),
-                      ],
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.slate400,
                     ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.slate400,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 20),
           CustomButton(
-            title: user.isAdmin
-                ? LocaleKeys.admin_enter_dashboard.tr()
+            title: user.isStaff
+                ? (user.isAdmin
+                    ? LocaleKeys.admin_enter_dashboard.tr()
+                    : LocaleKeys.settings_extra_instructor_enter_portal.tr())
                 : LocaleKeys.student_enter_portal.tr(),
             prefixIcon: Icon(
-              user.isAdmin ? Icons.admin_panel_settings_rounded : Icons.school_rounded,
+              user.isAdmin
+                  ? Icons.admin_panel_settings_rounded
+                  : (user.isInstructor
+                      ? Icons.school_rounded
+                      : Icons.school_rounded),
               color: AppColors.originalWhite,
               size: 18,
             ),
             onTap: () {
-              if (user.isAdmin) {
+              if (user.isStaff) {
                 context.router.replaceAll([const AdminLayoutRoute()]);
               } else {
                 context.router.replaceAll([const StudentLayoutRoute()]);

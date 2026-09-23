@@ -6,7 +6,6 @@ import 'package:attendance_app/core/helper/logout_session.dart';
 import 'package:attendance_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:attendance_app/features/auth/domain/models/auth_user.dart';
 import 'package:attendance_app/features/auth/domain/params/login_params.dart';
-import 'package:attendance_app/features/auth/domain/params/phone_auth_params.dart';
 import 'package:attendance_app/features/auth/domain/params/register_params.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/forgot_password_use_case.dart';
 import 'package:attendance_app/features/auth/domain/use_cases/login_use_case.dart';
@@ -33,21 +32,6 @@ class FakeAuthRepository implements AuthRepository {
   Future<Result<AuthUser>> register(RegisterParams params) async =>
       Success(
         data: AuthUser(id: '1', email: params.email, name: params.name),
-      );
-
-  @override
-  Future<Result<PhoneOtpDispatch>> sendPhoneOtp(PhoneAuthParams params) async =>
-      const Success(data: PhoneOtpSent('test-verification-id'));
-
-  @override
-  Future<Result<AuthUser>> verifyPhoneOtp(PhoneOtpParams params) async =>
-      Success(
-        data: AuthUser(
-          id: '1',
-          email: '',
-          phoneNumber: '+9647500000000',
-          name: params.name,
-        ),
       );
 
   @override
@@ -122,6 +106,7 @@ void main() {
     await cubit.register(
       const RegisterParams(
         name: 'Student',
+        phone: '+9647500000000',
         email: 'student@example.com',
         password: 'secret',
       ),

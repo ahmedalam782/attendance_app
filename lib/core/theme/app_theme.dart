@@ -61,8 +61,66 @@ abstract final class AppTheme {
           backgroundColor: AppColors.cardSurface,
           surfaceTintColor: AppColors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+        ),
+        datePickerTheme: DatePickerThemeData(
+          backgroundColor: AppColors.surface,
+          surfaceTintColor: AppColors.transparent,
+          headerBackgroundColor: AppColors.primary,
+          headerForegroundColor: AppColors.originalWhite,
+          headerHeadlineStyle: const TextStyle(
+            color: AppColors.originalWhite,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          headerHelpStyle: const TextStyle(
+            color: AppColors.originalWhite,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          rangePickerBackgroundColor: AppColors.surface,
+          rangePickerSurfaceTintColor: AppColors.transparent,
+          rangePickerHeaderBackgroundColor: AppColors.primary,
+          rangePickerHeaderForegroundColor: AppColors.originalWhite,
+          rangePickerHeaderHeadlineStyle: const TextStyle(
+            color: AppColors.originalWhite,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          rangePickerHeaderHelpStyle: const TextStyle(
+            color: AppColors.originalWhite,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          rangePickerShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.primary;
+            }
+            return null;
+          }),
+          dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.originalWhite;
+            }
+            if (states.contains(WidgetState.disabled)) {
+              return AppColors.slate300;
+            }
+            return AppColors.textPrimary;
+          }),
+          todayForegroundColor:
+              WidgetStateProperty.all(AppColors.primary),
+          todayBorder:
+              const BorderSide(color: AppColors.primary, width: 1.5),
+          rangeSelectionBackgroundColor: AppColors.primaryLight,
+          rangeSelectionOverlayColor: WidgetStateProperty.all(
+              AppColors.primaryLight.withValues(alpha: 0.5)),
         ),
         dividerTheme: const DividerThemeData(
           color: AppColors.border,

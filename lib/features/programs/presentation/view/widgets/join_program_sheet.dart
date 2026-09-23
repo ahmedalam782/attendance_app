@@ -7,7 +7,7 @@ import 'package:toastification/toastification.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -32,14 +32,7 @@ class JoinProgramSheet extends StatefulWidget {
     required String studentName,
   }) {
     final cubit = context.read<ProgramsCubit>();
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => BlocProvider.value(
+    return showAppSheet<bool>(context, builder: (_) => BlocProvider.value(
         value: cubit,
         child: JoinProgramSheet(
           studentId: studentId,
@@ -96,29 +89,16 @@ class _JoinProgramSheetState extends State<JoinProgramSheet> {
   Widget build(BuildContext context) {
     return BlocBuilder<ProgramsCubit, ProgramsState>(
       builder: (context, state) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 12,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
+        return AppSheetPadding(
           child: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SheetDragHandle(),
-                const SizedBox(height: 16),
-                Text(
-                  LocaleKeys.programs_join_title.tr(),
-                  style: 20.bold.copyWith(color: AppColors.slate900),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  LocaleKeys.programs_join_subtitle.tr(),
-                  style: 13.regular.copyWith(color: AppColors.slate400),
+                AppSheetHeader(
+                  title: LocaleKeys.programs_join_title.tr(),
+                  subtitle: LocaleKeys.programs_join_subtitle.tr(),
                 ),
                 const SizedBox(height: 20),
                 CustomTextFormField(

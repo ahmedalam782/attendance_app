@@ -6,7 +6,7 @@ import 'package:toastification/toastification.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/config/validations.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -27,11 +27,7 @@ class ForgotPasswordSheet extends StatefulWidget {
     final cubit = context.read<AuthCubit>();
     cubit.resetForgotPasswordState();
 
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
+    return showAppSheet<void>(context, builder: (_) => BlocProvider.value(
         value: cubit,
         child: ForgotPasswordSheet(initialEmail: initialEmail),
       ),
@@ -68,8 +64,6 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return BlocConsumer<AuthCubit, AuthStates>(
       listener: (context, state) {
         if (state.passwordResetSent) {
@@ -89,17 +83,7 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
       builder: (context, state) {
         final isSuccess = state.passwordResetSent;
 
-        return Container(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: 24 + bottomInset,
-          ),
-          decoration: const BoxDecoration(
-            color: AppColors.cardSurface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
+        return AppSheetPadding(
           child: AnimatedSize(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOutCubic,
@@ -140,8 +124,6 @@ class ForgotPasswordFormView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SheetDragHandle(width: 44),
-          const SizedBox(height: 20),
           Center(
             child: Container(
               width: 58,
@@ -218,8 +200,6 @@ class ForgotPasswordSuccessView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SheetDragHandle(width: 44),
-        const SizedBox(height: 24),
         Center(
           child: Container(
             width: 64,

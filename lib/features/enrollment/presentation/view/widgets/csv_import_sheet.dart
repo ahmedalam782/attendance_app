@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
@@ -24,10 +25,8 @@ class CsvImportSheet extends StatefulWidget {
 
   static Future<void> show(BuildContext context, {required String programId}) {
     final cubit = context.read<EnrollmentCubit>();
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showAppSheet(
+      context,
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: CsvImportSheet(programId: programId),
@@ -98,26 +97,9 @@ class _CsvImportSheetState extends State<CsvImportSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
-      padding: const EdgeInsets.only(top: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      padding: const EdgeInsets.only(top: 20),
       child: Column(
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 38,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.slate300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

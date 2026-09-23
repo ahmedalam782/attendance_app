@@ -95,6 +95,12 @@ class StudentProfileCard extends StatelessWidget {
             label: LocaleKeys.student_profile_email.tr(),
             value: user.email,
           ),
+          if (user.phoneNumber != null && user.phoneNumber!.trim().isNotEmpty)
+            ProfileInfoTile(
+              icon: Icons.phone_outlined,
+              label: LocaleKeys.student_profile_phone.tr(),
+              value: user.phoneNumber!,
+            ),
           ProfileInfoTile(
             icon: Icons.badge_outlined,
             label: LocaleKeys.student_profile_role.tr(),

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../languages/locale_keys.g.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import 'app_bottom_sheet.dart';
 import 'custom_button.dart';
-import 'sheet_drag_handle.dart';
 
 /// Clean bottom sheet modal for confirmations (e.g. sign-out, discard, delete).
 class CustomConfirmationBottomSheet extends StatelessWidget {
@@ -35,9 +35,9 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
     bool isDestructive = false,
     Color? confirmColor,
   }) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: Colors.transparent,
+    return showAppSheet<bool>(
+      context,
+      isDismissible: true,
       builder: (context) => CustomConfirmationBottomSheet(
         title: title,
         message: message,
@@ -56,22 +56,11 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
     final resolvedConfirm = confirmLabel ?? LocaleKeys.global_confirm.tr();
     final resolvedCancel = cancelLabel ?? LocaleKeys.global_cancel.tr();
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 16,
-        bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+    return AppSheetPadding(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SheetDragHandle(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,

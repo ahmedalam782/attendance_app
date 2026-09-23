@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
+import '../../../../../core/common/widgets/app_date_picker.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_text_field.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -21,13 +22,9 @@ class CreateProgramSheet extends StatefulWidget {
 
   static Future<bool?> show(BuildContext context, {required String ownerId}) {
     final cubit = context.read<ProgramsCubit>();
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return showAppSheet<bool>(
+      context,
+      maxHeightFactor: 0.70,
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: CreateProgramSheet(ownerId: ownerId),
@@ -57,24 +54,28 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
     super.dispose();
   }
 
-  Future<void> _pickDate({required bool isStart}) async {
+  Future<void> _pickDateRange({bool isStart = true}) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    DateTimeRange? initialRange;
+    if (_startDate != null && _endDate != null) {
+      initialRange = DateTimeRange(start: _startDate!, end: _endDate!);
+    } else if (_startDate != null) {
+      initialRange = DateTimeRange(start: _startDate!, end: _startDate!);
+    } else if (_endDate != null) {
+      initialRange = DateTimeRange(start: _endDate!, end: _endDate!);
+    }
+
+    final picked = await showAppDateRangePicker(
       context: context,
-      initialDate: (isStart ? _startDate : _endDate) ?? now,
-      firstDate: now.subtract(const Duration(days: 30)),
-      lastDate: now.add(const Duration(days: 365 * 2)),
+      initialDateRange: initialRange,
+      firstDate: now.subtract(const Duration(days: 60)),
+      lastDate: now.add(const Duration(days: 365 * 3)),
     );
+
     if (picked != null) {
       setState(() {
-        if (isStart) {
-          _startDate = picked;
-          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
-            _endDate = _startDate;
-          }
-        } else {
-          _endDate = picked;
-        }
+        _startDate = picked.start;
+        _endDate = picked.end;
       });
     }
   }
@@ -117,10 +118,10 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
         onTap: () => setState(() => _selectedType = type),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected ? color.withValues(alpha: 0.12) : AppColors.slate50,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? color : AppColors.slate200,
               width: isSelected ? 1.5 : 1.0,
@@ -131,13 +132,13 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
             children: [
               Icon(
                 icon,
-                size: 20,
+                size: 18,
                 color: isSelected ? color : AppColors.slate400,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 label,
-                style: (isSelected ? 12.bold : 12.medium).copyWith(
+                style: (isSelected ? 11.bold : 11.medium).copyWith(
                   color: isSelected ? color : AppColors.slate600,
                 ),
               ),
@@ -152,32 +153,22 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
   Widget build(BuildContext context) {
     return BlocBuilder<ProgramsCubit, ProgramsState>(
       builder: (context, state) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 12,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
+        return AppSheetPadding(
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SheetDragHandle(),
-                  const SizedBox(height: 16),
-                  Text(
-                    LocaleKeys.programs_create_title.tr(),
-                    style: 20.bold.copyWith(color: AppColors.slate900),
+                  AppSheetHeader(
+                    title: LocaleKeys.programs_create_title.tr(),
+                    subtitle: LocaleKeys.programs_create_subtitle.tr(),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    LocaleKeys.programs_create_subtitle.tr(),
-                    style: 13.regular.copyWith(color: AppColors.slate400),
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
 
                   // Type Selector
                   Row(
@@ -204,7 +195,7 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Title Field
                   CustomTextFormField(
@@ -218,7 +209,7 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Location Field
                   CustomTextFormField(
@@ -226,16 +217,16 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                     hintText: LocaleKeys.programs_location_hint.tr(),
                     prefixIcon: Icons.location_on_outlined,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Dates Row
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _pickDate(isStart: true),
+                          onPressed: () => _pickDateRange(isStart: true),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
@@ -243,14 +234,14 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                           ),
                           icon: const Icon(
                             Icons.calendar_today_rounded,
-                            size: 16,
+                            size: 15,
                             color: AppColors.slate500,
                           ),
                           label: Text(
                             _startDate != null
                                 ? DateFormat('yyyy-MM-dd').format(_startDate!)
                                 : LocaleKeys.programs_start_date.tr(),
-                            style: 12.medium.copyWith(
+                            style: 11.medium.copyWith(
                               color: _startDate != null
                                   ? AppColors.slate900
                                   : AppColors.slate400,
@@ -261,9 +252,9 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _pickDate(isStart: false),
+                          onPressed: () => _pickDateRange(isStart: false),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
@@ -271,14 +262,14 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                           ),
                           icon: const Icon(
                             Icons.event_rounded,
-                            size: 16,
+                            size: 15,
                             color: AppColors.slate500,
                           ),
                           label: Text(
                             _endDate != null
                                 ? DateFormat('yyyy-MM-dd').format(_endDate!)
                                 : LocaleKeys.programs_end_date.tr(),
-                            style: 12.medium.copyWith(
+                            style: 11.medium.copyWith(
                               color: _endDate != null
                                   ? AppColors.slate900
                                   : AppColors.slate400,
@@ -288,7 +279,7 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Description Field
                   CustomTextFormField(
@@ -297,7 +288,7 @@ class _CreateProgramSheetState extends State<CreateProgramSheet> {
                     prefixIcon: Icons.notes_rounded,
                     textInputType: TextInputType.multiline,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // Submit Button
                   CustomButton(

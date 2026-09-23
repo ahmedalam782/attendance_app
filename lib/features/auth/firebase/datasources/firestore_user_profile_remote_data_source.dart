@@ -20,9 +20,6 @@ class FirestoreUserProfileRemoteDataSource
 
   String _displayName(AuthUser user) {
     if (user.name?.trim().isNotEmpty == true) return user.name!.trim();
-    if (user.phoneNumber?.trim().isNotEmpty == true) {
-      return user.phoneNumber!.trim();
-    }
     final email = user.email.trim();
     final at = email.indexOf('@');
     if (at > 0) return email.substring(0, at);

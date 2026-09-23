@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/qr_card.dart';
-import '../../../../../core/common/widgets/sheet_drag_handle.dart';
 import '../../../../../core/crypto/qr_token_service.dart';
 import '../../../../../core/dependency_injection/injectable_config.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
@@ -30,10 +30,8 @@ class DynamicSessionQrSheet extends StatefulWidget {
     required Session session,
     required String programTitle,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showAppSheet<void>(
+      context,
       builder: (_) => BlocProvider.value(
         value: context.read<AttendanceCubit>(),
         child: DynamicSessionQrSheet(
@@ -121,62 +119,46 @@ class _DynamicSessionQrSheetState extends State<DynamicSessionQrSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return AppSheetPadding(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title Row
+          Row(
             children: [
-              const SheetDragHandle(),
-              const SizedBox(height: 12),
-
-              // Title & Close Row
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_scanner_rounded,
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          LocaleKeys.dynamic_qr_projector_mode.tr(),
-                          style: 18.bold.copyWith(color: AppColors.slate900),
-                        ),
-                        Text(
-                          '${widget.programTitle} • ${widget.session.title}',
-                          style: 12.medium.copyWith(color: AppColors.slate500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppColors.slate500),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.qr_code_scanner_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      LocaleKeys.dynamic_qr_projector_mode.tr(),
+                      style: 18.bold.copyWith(color: AppColors.slate900),
+                    ),
+                    Text(
+                      '${widget.programTitle} • ${widget.session.title}',
+                      style: 12.medium.copyWith(color: AppColors.slate500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
 
               // Dynamic QR Card
               QrCard(
@@ -286,8 +268,6 @@ class _DynamicSessionQrSheetState extends State<DynamicSessionQrSheet> {
               ),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }

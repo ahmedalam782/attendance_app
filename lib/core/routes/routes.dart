@@ -3,6 +3,9 @@ abstract class AppRoutes {
   static const String auth = '/auth';
   static const String register = '/register';
   static const String programDetails = '/program-details';
+  static const String instructorInvites = '/instructor-invites';
+  static const String instructorInviteCode = '/instructor-invite-code';
+  static const String instructorInvitesHistory = '/instructor-invites-history';
 
   // Admin shell & tabs
   static const String admin = '/admin';

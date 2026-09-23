@@ -14,5 +14,7 @@ class AuthUser {
   final String role;
 
   bool get isAdmin => role == 'admin';
+  bool get isInstructor => role == 'instructor';
+  bool get isStaff => isAdmin || isInstructor;
   bool get isStudent => role == 'student';
 }

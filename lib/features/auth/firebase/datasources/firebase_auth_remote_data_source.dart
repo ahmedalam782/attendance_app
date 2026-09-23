@@ -7,7 +7,6 @@ import 'package:injectable/injectable.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/params/login_params.dart';
-import '../../domain/params/phone_auth_params.dart';
 import '../../domain/params/register_params.dart';
 
 @Injectable(as: AuthRemoteDataSource)
@@ -38,9 +37,12 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<AuthUser> _mapUserWithRole(
     User user, {
     String? fallbackName,
+    String? fallbackPhone,
   }) async {
     final role = await _resolveRole(user);
-    final phone = user.phoneNumber;
+    final phone = (user.phoneNumber?.trim().isNotEmpty == true)
+        ? user.phoneNumber
+        : (fallbackPhone?.trim().isNotEmpty == true ? fallbackPhone!.trim() : null);
     final name = user.displayName?.trim().isNotEmpty == true
         ? user.displayName
         : (fallbackName?.trim().isNotEmpty == true ? fallbackName!.trim() : null);
@@ -79,93 +81,10 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
       // Account is usable even if display name update fails.
     }
     final user = _auth.currentUser ?? credential.user!;
-    return _mapUserWithRole(user, fallbackName: params.name);
-  }
-
-  @override
-  Future<PhoneOtpDispatch> sendPhoneOtp(PhoneAuthParams params) async {
-    final completer = Completer<PhoneOtpDispatch>();
-    final phone = params.phoneNumber.trim();
-
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phone,
-      timeout: const Duration(seconds: 60),
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        if (completer.isCompleted) return;
-        try {
-          final result = await _auth.signInWithCredential(credential);
-          final user = result.user;
-          if (user == null) {
-            completer.completeError(
-              FirebaseAuthException(
-                code: 'null-user',
-                message: 'Phone auto-verification returned no user.',
-              ),
-            );
-            return;
-          }
-          if (params.name?.trim().isNotEmpty == true &&
-              (user.displayName == null || user.displayName!.trim().isEmpty)) {
-            try {
-              await user.updateDisplayName(params.name!.trim());
-            } on FirebaseAuthException {
-              // Profile sync can still use fallback name.
-            }
-          }
-          final mapped = await _mapUserWithRole(
-            _auth.currentUser ?? user,
-            fallbackName: params.name,
-          );
-          if (!completer.isCompleted) {
-            completer.complete(PhoneOtpAutoVerified(mapped));
-          }
-        } catch (error) {
-          if (!completer.isCompleted) completer.completeError(error);
-        }
-      },
-      verificationFailed: (FirebaseAuthException error) {
-        if (!completer.isCompleted) completer.completeError(error);
-      },
-      codeSent: (String verificationId, int? _) {
-        if (!completer.isCompleted) {
-          completer.complete(PhoneOtpSent(verificationId));
-        }
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        if (!completer.isCompleted) {
-          completer.complete(PhoneOtpSent(verificationId));
-        }
-      },
-    );
-
-    return completer.future;
-  }
-
-  @override
-  Future<AuthUser> verifyPhoneOtp(PhoneOtpParams params) async {
-    final credential = PhoneAuthProvider.credential(
-      verificationId: params.verificationId,
-      smsCode: params.smsCode.trim(),
-    );
-    final result = await _auth.signInWithCredential(credential);
-    final user = result.user;
-    if (user == null) {
-      throw FirebaseAuthException(
-        code: 'null-user',
-        message: 'Phone sign-in returned no user.',
-      );
-    }
-    if (params.name?.trim().isNotEmpty == true &&
-        (user.displayName == null || user.displayName!.trim().isEmpty)) {
-      try {
-        await user.updateDisplayName(params.name!.trim());
-      } on FirebaseAuthException {
-        // Profile sync can still use fallback name.
-      }
-    }
     return _mapUserWithRole(
-      _auth.currentUser ?? user,
+      user,
       fallbackName: params.name,
+      fallbackPhone: params.phone.trim().isNotEmpty ? params.phone.trim() : null,
     );
   }
 
@@ -201,28 +120,57 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     final inviteRef = FirebaseFirestore.instance
         .collection('instructorInvites')
         .doc(normalizedCode);
-    final inviteDoc = await inviteRef.get();
-
-    if (inviteDoc.exists) {
-      final data = inviteDoc.data() ?? {};
-      final isUsed = data['used'] == true;
-      if (isUsed) {
-        throw FirebaseException(
-          plugin: 'cloud_firestore',
-          code: 'already-exists',
-          message: 'Instructor invite code has already been redeemed',
-        );
-      }
-      await inviteRef.update({
-        'used': true,
-        'usedBy': user.uid,
-        'redeemedAt': FieldValue.serverTimestamp(),
-      });
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    final currentRole = userDoc.data()?['role'] as String?;
+    if (currentRole == 'instructor') {
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'already-instructor',
+        message: 'Your account is already activated as an instructor',
+      );
     }
+
+    final inviteDoc = await inviteRef.get();
+    if (!inviteDoc.exists) {
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'invalid-invite-code',
+        message: 'Invalid or non-existent instructor invite code',
+      );
+    }
+
+    final data = inviteDoc.data() ?? {};
+    final isUsed = data['used'] == true;
+    if (isUsed) {
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'code-already-used',
+        message: 'Instructor invite code has already been redeemed',
+      );
+    }
+
+    String displayName = user.displayName ?? '';
+    if (displayName.trim().isEmpty) {
+      try {
+        final uDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        displayName = (uDoc.data()?['name'] ?? uDoc.data()?['displayName'] ?? '') as String;
+      } catch (_) {}
+    }
+
+    await inviteRef.update({
+      'used': true,
+      'usedBy': user.uid,
+      'usedByName': displayName,
+      'usedByEmail': user.email ?? '',
+      'redeemedAt': FieldValue.serverTimestamp(),
+    });
 
     await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
       {
-        'role': 'admin',
+        'role': 'instructor',
         'email': user.email ?? '',
         'updatedAt': FieldValue.serverTimestamp(),
       },
@@ -238,7 +186,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
       email: user.email ?? '',
       name: user.displayName,
       phoneNumber: user.phoneNumber,
-      role: 'admin',
+      role: 'instructor',
     );
   }
 }
