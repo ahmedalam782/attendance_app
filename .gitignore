@@ -51,3 +51,21 @@ app.*.map.json
 *.zip
 *.apk
 *.aab
+
+# Node / Cloud Functions
+**/node_modules/
+functions/.env
+functions/.runtimeconfig.json
+
+# Release signing & secrets (never commit)
+/necessary_files/*.jks
+/necessary_files/*.keystore
+/necessary_files/key.properties
+/necessary_files/service-account.json
+/necessary_files/google-services.json
+/necessary_files/GoogleService-Info.plist
+/necessary_files/node_modules/
+/android/key.properties
+**/service-account*.json
+.env
+.env.*
