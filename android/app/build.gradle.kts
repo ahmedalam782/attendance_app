@@ -13,13 +13,13 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    // Signing always comes from project-root necessary_files/
+    // Signing comes from necessary_files/ if present; falls back gracefully for public clones
     val keystorePropertiesFile = rootProject.file("../necessary_files/key.properties")
+    val hasKeystore = keystorePropertiesFile.exists()
     val keystoreProperties = Properties()
-    require(keystorePropertiesFile.exists()) {
-        "Missing ${keystorePropertiesFile.canonicalPath}. Create necessary_files/key.properties."
+    if (hasKeystore) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
     }
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -38,21 +38,29 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("../necessary_files/my-release-key.jks")
-            storePassword = keystoreProperties.getProperty("storePassword")
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
+        if (hasKeystore) {
+            create("release") {
+                storeFile = rootProject.file("../necessary_files/my-release-key.jks")
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
         }
     }
 
     buildTypes {
         getByName("debug") {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
 
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
