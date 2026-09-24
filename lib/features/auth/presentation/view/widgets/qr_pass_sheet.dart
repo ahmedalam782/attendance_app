@@ -9,7 +9,7 @@ import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../domain/models/auth_user.dart';
-import '../../utils/auth_user_utils.dart';
+import '../utils/auth_user_utils.dart';
 
 class QrPassSheet extends StatelessWidget {
   const QrPassSheet({super.key, required this.user});

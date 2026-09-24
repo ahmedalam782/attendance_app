@@ -13,7 +13,7 @@ import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/utils/session_utils.dart';
-import '../../../../auth/presentation/utils/auth_feedback.dart';
+import '../../../../auth/presentation/view/utils/auth_feedback.dart';
 import '../../../../auth/presentation/view_model/cubit/auth_cubit.dart';
 import '../../../../auth/presentation/view_model/cubit/auth_states.dart';
 import 'staff_profile_card.dart';

@@ -13,7 +13,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_icons.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/utils/form_utils.dart';
-import '../../helpers/auth_error_copy.dart';
+import '../utils/auth_error_copy.dart';
 import '../../view_model/cubit/auth_cubit.dart';
 import '../../view_model/cubit/auth_states.dart';
 

@@ -7,7 +7,7 @@ import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../auth/domain/models/auth_user.dart';
-import '../../../../auth/presentation/utils/auth_user_utils.dart';
+import '../../../../auth/presentation/view/utils/auth_user_utils.dart';
 
 /// Staff profile card displaying instructor / admin credentials and data.
 class StaffProfileCard extends StatelessWidget {

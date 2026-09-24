@@ -132,9 +132,10 @@ class AuthLoginForm extends StatelessWidget {
                           try {
                             context.router.push(const RegisterRoute());
                           } catch (_) {
+                            final page = const RegisterPage();
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const RegisterPage(),
+                                builder: (ctx) => page.wrappedRoute(ctx),
                               ),
                             );
                           }

@@ -1,4 +1,4 @@
-import '../../domain/models/auth_user.dart';
+import '../../../domain/models/auth_user.dart';
 
 /// Small helpers for [AuthUser] display values.
 abstract final class AuthUserUtils {

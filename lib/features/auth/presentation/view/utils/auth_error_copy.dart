@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 
-import '../../../../core/languages/locale_keys.g.dart';
+import '../../../../../core/languages/locale_keys.g.dart';
 
 /// Maps Firebase Auth error codes to localized UI copy.
 abstract final class AuthErrorCopy {

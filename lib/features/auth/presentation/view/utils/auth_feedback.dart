@@ -2,11 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 
-import '../../../../core/common/widgets/app_loading_dialog.dart';
-import '../../../../core/common/widgets/custom_toast.dart';
-import '../../../../core/languages/locale_keys.g.dart';
-import '../helpers/auth_error_copy.dart';
-import '../view_model/cubit/auth_states.dart';
+import '../../../../../core/common/widgets/app_loading_dialog.dart';
+import '../../../../../core/common/widgets/custom_toast.dart';
+import '../../../../../core/languages/locale_keys.g.dart';
+import '../../view_model/cubit/auth_states.dart';
+import 'auth_error_copy.dart';
 
 /// Shared loading / toast reactions for [AuthStates] changes.
 abstract final class AuthFeedback {

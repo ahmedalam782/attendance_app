@@ -11,7 +11,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/utils/session_utils.dart';
 import '../../../../../core/common/widgets/language_selector_tile.dart';
-import '../../../../auth/presentation/utils/auth_feedback.dart';
+import '../../../../auth/presentation/view/utils/auth_feedback.dart';
 import '../../../../auth/presentation/view/widgets/redeem_instructor_code_sheet.dart';
 import '../../../../auth/presentation/view_model/cubit/auth_cubit.dart';
 import '../../../../auth/presentation/view_model/cubit/auth_states.dart';

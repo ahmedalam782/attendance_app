@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../routes/app_router.gr.dart';
-import '../../features/auth/presentation/utils/auth_dialogs.dart';
+import '../../features/auth/presentation/view/utils/auth_dialogs.dart';
 import '../../features/auth/presentation/view_model/cubit/auth_cubit.dart';
 
 /// Shared logout + navigate-to-auth flow for settings screens.

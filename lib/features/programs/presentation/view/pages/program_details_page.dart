@@ -1,11 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/custom_app_bar.dart';
-import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/dependency_injection/injected_bloc_provider.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -13,9 +10,11 @@ import '../../../domain/entities/program.dart';
 import '../../../../attendance/presentation/view_model/cubit/attendance_cubit.dart';
 import '../../../../enrollment/presentation/view_model/cubit/enrollment_cubit.dart';
 import '../../../../sessions/presentation/view_model/cubit/sessions_cubit.dart';
+import '../utils/program_view_utils.dart';
 import '../widgets/program_details_body.dart';
 import '../widgets/program_qr_display_sheet.dart';
 
+/// Thin RoutePage for Program Details adhering to Al Faris presentation architecture.
 @RoutePage()
 class ProgramDetailsPage extends StatelessWidget implements AutoRouteWrapper {
   const ProgramDetailsPage({
@@ -36,15 +35,6 @@ class ProgramDetailsPage extends StatelessWidget implements AutoRouteWrapper {
     );
   }
 
-  void _copyInviteCode(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: program.inviteCode));
-    CustomToast(
-      context: context,
-      header: LocaleKeys.programs_code_copied.tr(),
-      type: ToastificationType.success,
-    ).showToast();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +46,7 @@ class ProgramDetailsPage extends StatelessWidget implements AutoRouteWrapper {
         actions: [
           IconButton(
             tooltip: LocaleKeys.programs_copy_code.tr(),
-            onPressed: () => _copyInviteCode(context),
+            onPressed: () => ProgramViewUtils.copyInviteCode(context, program.inviteCode),
             icon: const Icon(Icons.copy_rounded, size: 20),
             color: AppColors.textPrimary,
           ),

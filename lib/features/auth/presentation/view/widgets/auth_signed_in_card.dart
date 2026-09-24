@@ -9,7 +9,7 @@ import '../../../../../core/routes/app_router.gr.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../domain/models/auth_user.dart';
-import '../../utils/auth_user_utils.dart';
+import '../utils/auth_user_utils.dart';
 import 'auth_metric_card.dart';
 import 'qr_pass_sheet.dart';
 

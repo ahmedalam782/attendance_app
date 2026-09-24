@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
-import '../../../../core/languages/locale_keys.g.dart';
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
+import '../../../../../core/languages/locale_keys.g.dart';
 
 /// Auth-related dialogs and confirmation sheets.
 abstract final class AuthDialogs {
