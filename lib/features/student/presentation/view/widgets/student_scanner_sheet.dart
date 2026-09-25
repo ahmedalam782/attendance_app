@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../../../core/common/widgets/permission_confirmation_dialog.dart';
 import '../../../../../core/common/widgets/scanner_overlay_painter.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -16,7 +17,12 @@ import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 class StudentScannerSheet extends StatefulWidget {
   const StudentScannerSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context) async {
+    final confirmed = await PermissionConfirmationDialog.showCameraPermission(
+      context,
+    );
+    if (!confirmed || !context.mounted) return;
+
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -128,6 +134,31 @@ class _StudentScannerSheetState extends State<StudentScannerSheet>
                   controller: _scannerController,
                   onDetect: _onDetect,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.no_photography_rounded,
+                              size: 48,
+                              color: AppColors.absent,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              LocaleKeys.attendance_camera_permission_required
+                                  .tr(),
+                              textAlign: TextAlign.center,
+                              style: 13.bold
+                                  .copyWith(color: AppColors.originalWhite),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 // Darkened background with transparent center cutout

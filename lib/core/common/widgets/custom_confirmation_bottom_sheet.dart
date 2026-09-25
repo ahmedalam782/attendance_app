@@ -17,6 +17,8 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
     this.cancelLabel,
     this.isDestructive = false,
     this.confirmColor,
+    this.icon,
+    this.featurePoints = const [],
   });
 
   final String title;
@@ -25,6 +27,8 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
   final String? cancelLabel;
   final bool isDestructive;
   final Color? confirmColor;
+  final IconData? icon;
+  final List<String> featurePoints;
 
   static Future<bool?> show(
     BuildContext context, {
@@ -34,6 +38,8 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
     String? cancelLabel,
     bool isDestructive = false,
     Color? confirmColor,
+    IconData? icon,
+    List<String>? featurePoints,
   }) {
     return showAppSheet<bool>(
       context,
@@ -45,6 +51,8 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
         cancelLabel: cancelLabel,
         isDestructive: isDestructive,
         confirmColor: confirmColor,
+        icon: icon,
+        featurePoints: featurePoints ?? const [],
       ),
     );
   }
@@ -61,6 +69,26 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 8),
+          if (icon != null) ...[
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: effectiveColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: effectiveColor.withValues(alpha: 0.2),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 28,
+                color: effectiveColor,
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
           Text(
             title,
             textAlign: TextAlign.center,
@@ -70,8 +98,50 @@ class CustomConfirmationBottomSheet extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: 13.regular.copyWith(color: AppColors.textSecondary),
+            style: 13.regular.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
           ),
+          if (featurePoints.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.slate50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.slate200),
+              ),
+              child: Column(
+                children: featurePoints.map((point) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: AppColors.present,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            point,
+                            style: 12.medium.copyWith(
+                              color: AppColors.slate700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Row(
             children: [

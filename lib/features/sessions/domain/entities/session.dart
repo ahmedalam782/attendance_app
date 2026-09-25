@@ -24,4 +24,28 @@ class Session {
   bool get isScheduled => status == 'scheduled';
   bool get isOpen => status == 'open';
   bool get isClosed => status == 'closed';
+
+  Session copyWith({
+    String? id,
+    String? programId,
+    String? title,
+    DateTime? startAt,
+    DateTime? endAt,
+    String? status,
+    int? lateAfterMinutes,
+    int? attendanceCount,
+    DateTime? createdAt,
+  }) {
+    return Session(
+      id: id ?? this.id,
+      programId: programId ?? this.programId,
+      title: title ?? this.title,
+      startAt: startAt ?? this.startAt,
+      endAt: endAt ?? this.endAt,
+      status: status ?? this.status,
+      lateAfterMinutes: lateAfterMinutes ?? this.lateAfterMinutes,
+      attendanceCount: attendanceCount ?? this.attendanceCount,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

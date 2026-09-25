@@ -1,6 +1,8 @@
 import '../../../../core/api/base_response/result.dart';
 import '../entities/session.dart';
 import '../params/create_session_params.dart';
+import '../params/delete_session_params.dart';
+import '../params/update_session_params.dart';
 import '../params/update_session_status_params.dart';
 
 abstract class SessionsRepository {
@@ -9,4 +11,8 @@ abstract class SessionsRepository {
   Future<Result<Session>> createSession(CreateSessionParams params);
 
   Future<Result<void>> updateSessionStatus(UpdateSessionStatusParams params);
+
+  Future<Result<void>> deleteSession(DeleteSessionParams params);
+
+  Future<Result<Session>> updateSession(UpdateSessionParams params);
 }

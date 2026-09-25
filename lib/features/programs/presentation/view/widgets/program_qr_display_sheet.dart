@@ -1,18 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
-import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/qr_card.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../domain/entities/program.dart';
+import '../utils/program_view_utils.dart';
 
-class ProgramQrDisplaySheet extends StatelessWidget {
+class ProgramQrDisplaySheet extends StatefulWidget {
   const ProgramQrDisplaySheet({
     super.key,
     required this.program,
@@ -27,14 +25,27 @@ class ProgramQrDisplaySheet extends StatelessWidget {
     );
   }
 
-  void _copyInviteCode(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: program.inviteCode));
-    HapticFeedback.selectionClick();
-    CustomToast(
-      context: context,
-      header: LocaleKeys.programs_code_copied.tr(),
-      type: ToastificationType.success,
-    ).showToast();
+  @override
+  State<ProgramQrDisplaySheet> createState() => _ProgramQrDisplaySheetState();
+}
+
+class _ProgramQrDisplaySheetState extends State<ProgramQrDisplaySheet> {
+  final _qrKey = GlobalKey();
+  bool _isSharing = false;
+
+  Future<void> _shareQr() async {
+    if (_isSharing) return;
+    setState(() => _isSharing = true);
+    try {
+      await ProgramViewUtils.shareProgramInvite(
+        context,
+        title: widget.program.title,
+        code: widget.program.inviteCode,
+        qrKey: _qrKey,
+      );
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
   }
 
   @override
@@ -45,7 +56,7 @@ class ProgramQrDisplaySheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              program.title,
+              widget.program.title,
               style: 20.bold.copyWith(color: AppColors.slate900),
               textAlign: TextAlign.center,
             ),
@@ -55,82 +66,121 @@ class ProgramQrDisplaySheet extends StatelessWidget {
               style: 13.regular.copyWith(color: AppColors.slate400),
               textAlign: TextAlign.center,
             ),
-              const SizedBox(height: 20),
-              QrCard(
-                title: program.title,
-                token: 'attendance:program:${program.inviteCode}',
-                size: 210,
-                footerText:
-                    '${LocaleKeys.programs_invite_code_label.tr()}: ${program.inviteCode}',
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            const SizedBox(height: 18),
+
+            // Captured QR Card
+            RepaintBoundary(
+              key: _qrKey,
+              child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.slate100,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.slate200),
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(28),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
+                child: QrCard(
+                  title: widget.program.title,
+                  token: 'attendance:program:${widget.program.inviteCode}',
+                  size: 210,
+                  footerText:
+                      '${LocaleKeys.programs_invite_code_label.tr()}: ${widget.program.inviteCode}',
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Invite Code Display Container with Quick Copy & Share actions
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.slate100,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.slate200),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
                       Icons.vpn_key_rounded,
                       size: 18,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        program.inviteCode,
-                        style: 18.bold.copyWith(
-                          color: AppColors.primary,
-                          letterSpacing: 3.0,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.program.inviteCode,
+                          style: 18.bold.copyWith(
+                            color: AppColors.primary,
+                            letterSpacing: 2.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    InkWell(
-                      onTap: () => _copyInviteCode(context),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.copy_rounded,
-                              size: 16,
-                              color: AppColors.slate600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              LocaleKeys.programs_copy_code.tr(),
-                              style: 12.medium
-                                  .copyWith(color: AppColors.slate600),
-                            ),
-                          ],
+                        Text(
+                          LocaleKeys.programs_invite_code_label.tr(),
+                          style: 11.medium.copyWith(color: AppColors.slate500),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    tooltip: LocaleKeys.programs_copy_code.tr(),
+                    icon: const Icon(
+                      Icons.copy_rounded,
+                      size: 20,
+                      color: AppColors.slate700,
+                    ),
+                    onPressed: () => ProgramViewUtils.copyInviteCode(
+                      context,
+                      widget.program.inviteCode,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: LocaleKeys.programs_share_qr.tr(),
+                    icon: const Icon(
+                      Icons.share_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: _shareQr,
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              CustomButton(
-                title: LocaleKeys.global_cancel.tr(),
-                isGradient: false,
-                isFilled: false,
-                borderColor: AppColors.slate300,
-                titleStyle: 14.medium.copyWith(color: AppColors.slate700),
-                onTap: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(height: 18),
+
+            // Primary Share Button
+            CustomButton(
+              title: LocaleKeys.programs_share_qr.tr(),
+              isLoading: _isSharing,
+              prefixIcon: const Icon(
+                Icons.share_rounded,
+                color: Colors.white,
+                size: 18,
               ),
-              const SizedBox(height: 12),
-            ],
-          ),
+              onTap: _shareQr,
+            ),
+            const SizedBox(height: 10),
+
+            // Secondary Cancel / Close Button
+            CustomButton(
+              title: LocaleKeys.global_cancel.tr(),
+              isGradient: false,
+              isFilled: false,
+              borderColor: AppColors.slate300,
+              titleStyle: 14.medium.copyWith(color: AppColors.slate700),
+              onTap: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(height: 12),
+          ],
         ),
-      );
+      ),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/app_bottom_sheet.dart';
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/empty_state_card.dart';
 import '../../../../../core/common/widgets/status_chip.dart';
@@ -199,59 +200,42 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
     ).showToast();
   }
 
-  void _confirmMarkAllAbsent(List<EnrolledStudent> unmarkedStudents) {
+  Future<void> _confirmMarkAllAbsent(
+      List<EnrolledStudent> unmarkedStudents) async {
     if (unmarkedStudents.isEmpty) return;
 
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(LocaleKeys.auto_absent_confirm_title.tr(), style: 16.bold),
-        content: Text(
-          LocaleKeys.auto_absent_confirm_desc.tr(
-            namedArgs: {'count': unmarkedStudents.length.toString()},
-          ),
-          style: 13.regular,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text(LocaleKeys.global_cancel.tr(), style: 13.medium),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogCtx).pop();
-              final scannedBy =
-                  FirebaseAuth.instance.currentUser?.uid ?? 'admin';
-              final names = {for (final s in unmarkedStudents) s.id: s.name};
-              final count = await context
-                  .read<AttendanceCubit>()
-                  .markUnmarkedStudentsAbsent(
-                    programId: widget.program.id,
-                    sessionId: widget.session.id,
-                    studentIds: unmarkedStudents.map((s) => s.id).toList(),
-                    studentNames: names,
-                    scannedBy: scannedBy,
-                  );
-
-              if (mounted && count > 0) {
-                CustomToast(
-                  context: context,
-                  header: LocaleKeys.auto_absent_success.tr(
-                    namedArgs: {'count': count.toString()},
-                  ),
-                  type: ToastificationType.success,
-                ).showToast();
-              }
-            },
-            child: Text(
-              LocaleKeys.auto_absent_mark_all_unmarked.tr(),
-              style: 13.bold.copyWith(color: AppColors.absent),
-            ),
-          ),
-        ],
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: LocaleKeys.auto_absent_confirm_title.tr(),
+      message: LocaleKeys.auto_absent_confirm_desc.tr(
+        namedArgs: {'count': unmarkedStudents.length.toString()},
       ),
+      confirmLabel: LocaleKeys.auto_absent_mark_all_unmarked.tr(),
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.person_off_rounded,
     );
+    if (confirmed != true || !mounted) return;
+
+    final scannedBy = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
+    final names = {for (final s in unmarkedStudents) s.id: s.name};
+    final count = await context.read<AttendanceCubit>().markUnmarkedStudentsAbsent(
+          programId: widget.program.id,
+          sessionId: widget.session.id,
+          studentIds: unmarkedStudents.map((s) => s.id).toList(),
+          studentNames: names,
+          scannedBy: scannedBy,
+        );
+
+    if (mounted && count > 0) {
+      CustomToast(
+        context: context,
+        header: LocaleKeys.auto_absent_success.tr(
+          namedArgs: {'count': count.toString()},
+        ),
+        type: ToastificationType.success,
+      ).showToast();
+    }
   }
 
   @override
@@ -362,6 +346,47 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
 
                     return Column(
                       children: [
+                        if (attendanceState.pendingSyncCount > 0)
+                          Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 4,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.late.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: AppColors.late.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.sync_rounded,
+                                  size: 15,
+                                  color: AppColors.late,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    LocaleKeys.attendance_pending_sync.tr(
+                                      namedArgs: {
+                                        'count':
+                                            '${attendanceState.pendingSyncCount}',
+                                      },
+                                    ),
+                                    style: 11.semiBold.copyWith(
+                                      color: AppColors.late,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         if (widget.isAdmin && unmarked.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -495,9 +520,45 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                                     ],
                                   ),
                                 ),
-                                if (record != null)
-                                  StatusChip.fromString(record.status)
-                                else
+                                if (record != null) ...[
+                                  if (record.isPendingSync) ...[
+                                    Tooltip(
+                                      message: LocaleKeys.attendance_pending_sync
+                                          .tr(namedArgs: {'count': '1'}),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.late
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.sync_rounded,
+                                              size: 11,
+                                              color: AppColors.late,
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              'Sync',
+                                              style: 9.bold.copyWith(
+                                                color: AppColors.late,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                  ],
+                                  StatusChip.fromString(record.status),
+                                ] else
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,

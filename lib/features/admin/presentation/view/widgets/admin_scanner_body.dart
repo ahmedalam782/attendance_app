@@ -8,6 +8,7 @@ import '../../../../../core/common/widgets/ambient_glow_background.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/feature_page_header.dart';
 import '../../../../../core/common/widgets/pending_sync_badge.dart';
+import '../../../../../core/common/widgets/permission_confirmation_dialog.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -37,6 +38,12 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
     if (_adminUid.isNotEmpty) {
       context.read<ProgramsCubit>().watchAdminPrograms(_adminUid);
     }
+  }
+
+  Future<void> _handleStartCamera() async {
+    final confirmed = await PermissionConfirmationDialog.showCameraPermission(context);
+    if (!confirmed || !mounted) return;
+    _startCamera();
   }
 
   void _startCamera() {
@@ -286,7 +293,7 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
                             color: AppColors.originalWhite,
                             size: 18,
                           ),
-                          onTap: _startCamera,
+                          onTap: _handleStartCamera,
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -311,6 +318,39 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
         MobileScanner(
           controller: _scannerController,
           onDetect: _onDetect,
+          errorBuilder: (context, error) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.no_photography_rounded,
+                      size: 52,
+                      color: AppColors.absent,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      LocaleKeys.attendance_camera_permission_required.tr(),
+                      textAlign: TextAlign.center,
+                      style: 14.bold.copyWith(color: AppColors.originalWhite),
+                    ),
+                    const SizedBox(height: 20),
+                    CustomButton(
+                      title: LocaleKeys.attendance_grant_permission.tr(),
+                      prefixIcon: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: AppColors.originalWhite,
+                        size: 18,
+                      ),
+                      onTap: _handleStartCamera,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
 
         // Dark viewfinder framing overlay

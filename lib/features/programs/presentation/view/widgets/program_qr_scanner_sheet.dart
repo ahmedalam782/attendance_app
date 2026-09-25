@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../../../core/common/widgets/permission_confirmation_dialog.dart';
 import '../../../../../core/common/widgets/scanner_overlay_painter.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -21,7 +22,12 @@ class ProgramQrScannerSheet extends StatefulWidget {
   static Future<String?> show(
     BuildContext context, {
     String? instruction,
-  }) {
+  }) async {
+    final confirmed = await PermissionConfirmationDialog.showCameraPermission(
+      context,
+    );
+    if (!confirmed || !context.mounted) return null;
+
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -119,6 +125,30 @@ class _ProgramQrScannerSheetState extends State<ProgramQrScannerSheet>
               controller: _scannerController,
               onDetect: _onDetect,
               fit: BoxFit.cover,
+              errorBuilder: (context, error) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.no_photography_rounded,
+                          size: 48,
+                          color: AppColors.absent,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          LocaleKeys.attendance_camera_permission_required.tr(),
+                          textAlign: TextAlign.center,
+                          style: 13.bold
+                              .copyWith(color: AppColors.originalWhite),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
 
             CustomPaint(

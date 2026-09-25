@@ -115,10 +115,14 @@ import '../../features/sessions/domain/repositories/sessions_repository.dart'
     as _i374;
 import '../../features/sessions/domain/use_cases/create_session_use_case.dart'
     as _i686;
+import '../../features/sessions/domain/use_cases/delete_session_use_case.dart'
+    as _i439;
 import '../../features/sessions/domain/use_cases/get_sessions_use_case.dart'
     as _i383;
 import '../../features/sessions/domain/use_cases/update_session_status_use_case.dart'
     as _i403;
+import '../../features/sessions/domain/use_cases/update_session_use_case.dart'
+    as _i133;
 import '../../features/sessions/presentation/view_model/cubit/sessions_cubit.dart'
     as _i510;
 import '../crypto/qr_token_service.dart' as _i922;
@@ -276,11 +280,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i686.CreateSessionUseCase>(
       () => _i686.CreateSessionUseCase(gh<_i374.SessionsRepository>()),
     );
+    gh.factory<_i439.DeleteSessionUseCase>(
+      () => _i439.DeleteSessionUseCase(gh<_i374.SessionsRepository>()),
+    );
     gh.factory<_i383.GetSessionsUseCase>(
       () => _i383.GetSessionsUseCase(gh<_i374.SessionsRepository>()),
     );
     gh.factory<_i403.UpdateSessionStatusUseCase>(
       () => _i403.UpdateSessionStatusUseCase(gh<_i374.SessionsRepository>()),
+    );
+    gh.factory<_i133.UpdateSessionUseCase>(
+      () => _i133.UpdateSessionUseCase(gh<_i374.SessionsRepository>()),
     );
     gh.factory<_i74.CreateProgramUseCase>(
       () => _i74.CreateProgramUseCase(gh<_i1036.ProgramsRepository>()),
@@ -305,17 +315,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i681.JoinProgramByCodeUseCase>(),
       ),
     );
+    gh.factory<_i96.ReportsCubit>(
+      () => _i96.ReportsCubit(
+        gh<_i853.GetProgramReportUseCase>(),
+        gh<_i848.ExportAttendanceCsvUseCase>(),
+      ),
+    );
     gh.factory<_i510.SessionsCubit>(
       () => _i510.SessionsCubit(
         gh<_i383.GetSessionsUseCase>(),
         gh<_i686.CreateSessionUseCase>(),
         gh<_i403.UpdateSessionStatusUseCase>(),
-      ),
-    );
-    gh.factory<_i96.ReportsCubit>(
-      () => _i96.ReportsCubit(
-        gh<_i853.GetProgramReportUseCase>(),
-        gh<_i848.ExportAttendanceCsvUseCase>(),
+        gh<_i439.DeleteSessionUseCase>(),
+        gh<_i133.UpdateSessionUseCase>(),
       ),
     );
     gh.factory<_i796.AuthCubit>(

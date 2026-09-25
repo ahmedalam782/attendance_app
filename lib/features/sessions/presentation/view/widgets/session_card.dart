@@ -13,12 +13,18 @@ class SessionCard extends StatelessWidget {
     this.isAdmin = false,
     this.onTap,
     this.onStatusChanged,
+    this.onEdit,
+    this.onDelete,
+    this.onShowQr,
   });
 
   final Session session;
   final bool isAdmin;
   final VoidCallback? onTap;
   final ValueChanged<String>? onStatusChanged;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final VoidCallback? onShowQr;
 
   Color get _statusColor {
     if (session.isOpen) return AppColors.present;
@@ -113,6 +119,92 @@ class SessionCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (isAdmin && (onEdit != null || onDelete != null || onShowQr != null)) ...[
+                  const SizedBox(width: 4),
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      size: 20,
+                      color: AppColors.slate400,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    style: IconButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'show_qr') onShowQr?.call();
+                      if (value == 'edit') onEdit?.call();
+                      if (value == 'delete') onDelete?.call();
+                    },
+                    itemBuilder: (context) => [
+                      if (onShowQr != null && session.isOpen)
+                        PopupMenuItem(
+                          value: 'show_qr',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.qr_code_2_rounded,
+                                size: 18,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                LocaleKeys.dynamic_qr_display_qr.tr(),
+                                style: 13.medium.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (onEdit != null)
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.slate700,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                LocaleKeys.sessions_edit_session.tr(),
+                                style: 13.medium.copyWith(
+                                  color: AppColors.slate900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (onDelete != null)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: AppColors.absent,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                LocaleKeys.sessions_delete_session.tr(),
+                                style: 13.medium.copyWith(
+                                  color: AppColors.absent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 10),
@@ -211,26 +303,54 @@ class SessionCard extends StatelessWidget {
                           elevation: 0,
                         ),
                       )
-                    : OutlinedButton.icon(
-                        onPressed: onStatusChanged != null
-                            ? () => onStatusChanged!('closed')
-                            : null,
-                        icon: const Icon(Icons.stop_rounded, size: 16),
-                        label: Text(
-                          LocaleKeys.sessions_close_session.tr(),
-                          style: 12.bold,
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.absent,
-                          side: const BorderSide(color: AppColors.absent),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          if (onShowQr != null)
+                            ElevatedButton.icon(
+                              onPressed: onShowQr,
+                              icon: const Icon(Icons.qr_code_2_rounded, size: 16),
+                              label: Text(
+                                LocaleKeys.dynamic_qr_display_qr.tr(),
+                                style: 12.bold,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
+                          OutlinedButton.icon(
+                            onPressed: onStatusChanged != null
+                                ? () => onStatusChanged!('closed')
+                                : null,
+                            icon: const Icon(Icons.stop_rounded, size: 16),
+                            label: Text(
+                              LocaleKeys.sessions_close_session.tr(),
+                              style: 12.bold,
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.absent,
+                              side: const BorderSide(color: AppColors.absent),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+                        ],
                       ),
               ),
             ],
@@ -238,5 +358,6 @@ class SessionCard extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Architecture-Clean%20%2B%20BLoC-blueviolet?style=for-the-badge" alt="Clean Architecture" />
   <img src="https://img.shields.io/badge/Backend-Firebase%20Serverless-FFA611?logo=firebase&logoColor=white&style=for-the-badge" alt="Firebase" />
   <img src="https://img.shields.io/badge/Security-Ed25519%20%2B%20HMAC-00C853?style=for-the-badge" alt="Security" />
-  <img src="https://img.shields.io/badge/Tests-37%2F37%20Passing-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-48%2F48%20Passing-brightgreen?style=for-the-badge" alt="Tests" />
   <img src="https://img.shields.io/badge/Localization-Arabic%20RTL%20%7C%20English-E91E63?style=for-the-badge" alt="i18n" />
   <a href="https://trello.com/b/Cju0jmDo/smart-attendance-app"><img src="https://img.shields.io/badge/Trello-Agile%20Board-0079BF?logo=trello&logoColor=white&style=for-the-badge" alt="Trello Board" /></a>
 </p>
@@ -217,7 +217,7 @@ dart run build_runner build --delete-conflicting-outputs
 # Run static code analysis (0 warnings / 0 errors guaranteed)
 flutter analyze
 
-# Execute complete test suite (37/37 tests passing)
+# Execute complete test suite (48/48 tests passing)
 flutter test
 ```
 

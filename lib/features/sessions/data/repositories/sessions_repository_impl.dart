@@ -4,6 +4,8 @@ import '../../../../core/api/base_response/result.dart';
 import '../../../../core/api/execute_firebase.dart';
 import '../../domain/entities/session.dart';
 import '../../domain/params/create_session_params.dart';
+import '../../domain/params/delete_session_params.dart';
+import '../../domain/params/update_session_params.dart';
 import '../../domain/params/update_session_status_params.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../datasources/sessions_remote_data_source.dart';
@@ -31,5 +33,18 @@ class SessionsRepositoryImpl implements SessionsRepository {
   Future<Result<void>> updateSessionStatus(UpdateSessionStatusParams params) =>
       executeFirebase(() async {
         await _remote.updateSessionStatus(params);
+      });
+
+  @override
+  Future<Result<void>> deleteSession(DeleteSessionParams params) =>
+      executeFirebase(() async {
+        await _remote.deleteSession(params);
+      });
+
+  @override
+  Future<Result<Session>> updateSession(UpdateSessionParams params) =>
+      executeFirebase(() async {
+        final model = await _remote.updateSession(params);
+        return model.toEntity();
       });
 }

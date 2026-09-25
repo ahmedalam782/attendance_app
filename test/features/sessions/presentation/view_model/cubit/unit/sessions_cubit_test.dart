@@ -5,10 +5,14 @@ import 'package:attendance_app/core/api/base_state/base_state.dart';
 import 'package:attendance_app/features/sessions/domain/entities/session.dart';
 import 'package:attendance_app/features/sessions/domain/params/create_session_params.dart';
 import 'package:attendance_app/features/sessions/domain/params/update_session_status_params.dart';
+import 'package:attendance_app/features/sessions/domain/params/delete_session_params.dart';
+import 'package:attendance_app/features/sessions/domain/params/update_session_params.dart';
 import 'package:attendance_app/features/sessions/domain/repositories/sessions_repository.dart';
 import 'package:attendance_app/features/sessions/domain/use_cases/create_session_use_case.dart';
+import 'package:attendance_app/features/sessions/domain/use_cases/delete_session_use_case.dart';
 import 'package:attendance_app/features/sessions/domain/use_cases/get_sessions_use_case.dart';
 import 'package:attendance_app/features/sessions/domain/use_cases/update_session_status_use_case.dart';
+import 'package:attendance_app/features/sessions/domain/use_cases/update_session_use_case.dart';
 import 'package:attendance_app/features/sessions/presentation/view_model/cubit/sessions_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,6 +45,26 @@ class FakeSessionsRepository implements SessionsRepository {
     return const Success();
   }
 
+  @override
+  Future<Result<void>> deleteSession(DeleteSessionParams params) async {
+    return const Success();
+  }
+
+  @override
+  Future<Result<Session>> updateSession(UpdateSessionParams params) async {
+    final session = Session(
+      id: params.sessionId,
+      programId: params.programId,
+      title: params.title,
+      startAt: params.startAt,
+      endAt: params.endAt,
+      status: 'scheduled',
+      lateAfterMinutes: params.lateAfterMinutes,
+      attendanceCount: 0,
+    );
+    return Success(data: session);
+  }
+
   void dispose() {
     _controller.close();
   }
@@ -56,6 +80,8 @@ void main() {
       GetSessionsUseCase(repository),
       CreateSessionUseCase(repository),
       UpdateSessionStatusUseCase(repository),
+      DeleteSessionUseCase(repository),
+      UpdateSessionUseCase(repository),
     );
   });
 
@@ -116,5 +142,37 @@ void main() {
 
     cubit.resetUpdateState();
     expect(cubit.state.updateStatusState.state, StatusState.initial);
+  });
+
+  test('deleteSession completes and updates state', () async {
+    const params = DeleteSessionParams(
+      programId: 'prog_1',
+      sessionId: 's1',
+    );
+
+    final success = await cubit.deleteSession(params);
+    expect(success, isTrue);
+    expect(cubit.state.deleteSessionState.state, StatusState.success);
+
+    cubit.resetDeleteState();
+    expect(cubit.state.deleteSessionState.state, StatusState.initial);
+  });
+
+  test('updateSession completes and updates state', () async {
+    final params = UpdateSessionParams(
+      programId: 'prog_1',
+      sessionId: 's1',
+      title: 'Updated Title',
+      startAt: DateTime(2026, 9, 21, 11, 0),
+      endAt: DateTime(2026, 9, 21, 13, 0),
+      lateAfterMinutes: 20,
+    );
+
+    final success = await cubit.updateSession(params);
+    expect(success, isTrue);
+    expect(cubit.state.updateSessionState.state, StatusState.success);
+
+    cubit.resetUpdateSessionState();
+    expect(cubit.state.updateSessionState.state, StatusState.initial);
   });
 }

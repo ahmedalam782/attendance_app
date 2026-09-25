@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../domain/params/create_session_params.dart';
+import '../../domain/params/delete_session_params.dart';
+import '../../domain/params/update_session_params.dart';
 import '../../domain/params/update_session_status_params.dart';
 import '../models/session_model.dart';
 import 'sessions_remote_data_source.dart';
@@ -62,5 +64,38 @@ class FirestoreSessionsRemoteDataSource implements SessionsRemoteDataSource {
       'status': params.status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  @override
+  Future<void> deleteSession(DeleteSessionParams params) async {
+    final programDoc = _firestore.collection('programs').doc(params.programId);
+    final sessionDoc = _sessionsRef(params.programId).doc(params.sessionId);
+
+    final attendanceSnap = await sessionDoc.collection('attendance').get();
+    final batch = _firestore.batch();
+    for (final doc in attendanceSnap.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(sessionDoc);
+    batch.update(programDoc, {
+      'sessionCount': FieldValue.increment(-1),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+  }
+
+  @override
+  Future<SessionModel> updateSession(UpdateSessionParams params) async {
+    final docRef = _sessionsRef(params.programId).doc(params.sessionId);
+    await docRef.update({
+      'title': params.title.trim(),
+      'startAt': Timestamp.fromDate(params.startAt),
+      'endAt': Timestamp.fromDate(params.endAt),
+      'lateAfterMinutes': params.lateAfterMinutes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    final snap = await docRef.get();
+    return SessionModel.fromFirestore(snap, params.programId);
   }
 }

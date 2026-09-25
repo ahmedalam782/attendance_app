@@ -43,10 +43,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       effectiveLeading = IconButton(
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         onPressed: () => Navigator.of(context).maybePop(),
-        icon: Icon(
-          Directionality.of(context) == TextDirection.rtl
-              ? Icons.arrow_forward_ios_rounded
-              : Icons.arrow_back_ios_new_rounded,
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
           size: 18,
           color: AppColors.textPrimary,
         ),

@@ -131,6 +131,41 @@ class _StudentHistoryBodyState extends State<StudentHistoryBody> {
                                     ],
                                   ),
                                 ),
+                                if (record.isPendingSync) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.late
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: AppColors.late
+                                            .withValues(alpha: 0.35),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.sync_rounded,
+                                          size: 12,
+                                          color: AppColors.late,
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          'Queued',
+                                          style: 10.semiBold.copyWith(
+                                            color: AppColors.late,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,

@@ -9,6 +9,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/program.dart';
 import '../../../../attendance/presentation/view_model/cubit/attendance_cubit.dart';
 import '../../../../enrollment/presentation/view_model/cubit/enrollment_cubit.dart';
+import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 import '../../../../sessions/presentation/view_model/cubit/sessions_cubit.dart';
 import '../utils/program_view_utils.dart';
 import '../widgets/program_details_body.dart';
@@ -30,7 +31,9 @@ class ProgramDetailsPage extends StatelessWidget implements AutoRouteWrapper {
   Widget wrappedRoute(BuildContext context) {
     return InjectedBlocProvider<SessionsCubit>(
       child: InjectedBlocProvider<EnrollmentCubit>(
-        child: InjectedBlocProvider<AttendanceCubit>(child: this),
+        child: InjectedBlocProvider<AttendanceCubit>(
+          child: InjectedBlocProvider<ProgramsCubit>(child: this),
+        ),
       ),
     );
   }
@@ -43,23 +46,28 @@ class ProgramDetailsPage extends StatelessWidget implements AutoRouteWrapper {
         title: program.title,
         backgroundColor: AppColors.background,
         centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: LocaleKeys.programs_copy_code.tr(),
-            onPressed: () => ProgramViewUtils.copyInviteCode(context, program.inviteCode),
-            icon: const Icon(Icons.copy_rounded, size: 20),
-            color: AppColors.textPrimary,
-          ),
-          IconButton(
-            tooltip: LocaleKeys.programs_show_qr.tr(),
-            onPressed: () => ProgramQrDisplaySheet.show(
-              context,
-              program: program,
-            ),
-            icon: const Icon(Icons.qr_code_2_rounded, size: 22),
-            color: AppColors.primary,
-          ),
-        ],
+        actions: isAdmin
+            ? [
+                IconButton(
+                  tooltip: LocaleKeys.programs_copy_code.tr(),
+                  onPressed: () => ProgramViewUtils.copyInviteCode(
+                    context,
+                    program.inviteCode,
+                  ),
+                  icon: const Icon(Icons.copy_rounded, size: 20),
+                  color: AppColors.textPrimary,
+                ),
+                IconButton(
+                  tooltip: LocaleKeys.programs_show_qr.tr(),
+                  onPressed: () => ProgramQrDisplaySheet.show(
+                    context,
+                    program: program,
+                  ),
+                  icon: const Icon(Icons.qr_code_2_rounded, size: 22),
+                  color: AppColors.primary,
+                ),
+              ]
+            : null,
       ),
       body: ProgramDetailsBody(
         program: program,

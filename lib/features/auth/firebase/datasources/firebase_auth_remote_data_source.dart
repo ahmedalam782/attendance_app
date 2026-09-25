@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/dependency_injection/injectable_config.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/params/login_params.dart';
@@ -11,27 +14,76 @@ import '../../domain/params/register_params.dart';
 
 @Injectable(as: AuthRemoteDataSource)
 class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
-  FirebaseAuthRemoteDataSource(this._auth);
+  FirebaseAuthRemoteDataSource(
+    this._auth, [
+    SharedPreferences? prefs,
+  ]) : _prefs = prefs;
 
   final FirebaseAuth _auth;
+  final SharedPreferences? _prefs;
+
+  SharedPreferences? get _resolvedPrefs {
+    if (_prefs != null) return _prefs;
+    if (getIt.isRegistered<SharedPreferences>()) {
+      return getIt<SharedPreferences>();
+    }
+    return null;
+  }
 
   Future<String> _resolveRole(User user) async {
+    final prefs = _resolvedPrefs;
+    final cachedRole = prefs?.getString('cached_role_${user.uid}');
+
+    // 1. Try to read token claim with short timeout (never hang offline)
     try {
-      final tokenResult = await user.getIdTokenResult();
+      final tokenResult = await user
+          .getIdTokenResult()
+          .timeout(const Duration(milliseconds: 1500));
       final claimRole = tokenResult.claims?['role'] as String?;
       if (claimRole != null && claimRole.isNotEmpty) {
+        await prefs?.setString('cached_role_${user.uid}', claimRole);
         return claimRole;
       }
     } catch (_) {}
+
+    // 2. Try Firestore local cache first (instant local SQLite read)
     try {
-      final doc =
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (doc.exists) {
-        final role = doc.data()?['role'] as String?;
-        if (role != null && role.isNotEmpty) return role;
+      final cacheDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get(const GetOptions(source: Source.cache))
+          .timeout(const Duration(milliseconds: 800));
+      if (cacheDoc.exists) {
+        final role = cacheDoc.data()?['role'] as String?;
+        if (role != null && role.isNotEmpty) {
+          await prefs?.setString('cached_role_${user.uid}', role);
+          return role;
+        }
       }
     } catch (_) {}
-    return 'student';
+
+    // 3. If cached role exists in SharedPreferences, return it immediately
+    if (cachedRole != null && cachedRole.isNotEmpty) {
+      return cachedRole;
+    }
+
+    // 4. Try network fetch with a strict short timeout
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(milliseconds: 1500));
+      if (doc.exists) {
+        final role = doc.data()?['role'] as String?;
+        if (role != null && role.isNotEmpty) {
+          await prefs?.setString('cached_role_${user.uid}', role);
+          return role;
+        }
+      }
+    } catch (_) {}
+
+    return cachedRole ?? 'student';
   }
 
   Future<AuthUser> _mapUserWithRole(
@@ -39,13 +91,29 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     String? fallbackName,
     String? fallbackPhone,
   }) async {
+    final prefs = _resolvedPrefs;
+    final cachedName = prefs?.getString('cached_name_${user.uid}');
+    final cachedPhone = prefs?.getString('cached_phone_${user.uid}');
+
     final role = await _resolveRole(user);
     final phone = (user.phoneNumber?.trim().isNotEmpty == true)
         ? user.phoneNumber
-        : (fallbackPhone?.trim().isNotEmpty == true ? fallbackPhone!.trim() : null);
+        : (fallbackPhone?.trim().isNotEmpty == true
+            ? fallbackPhone!.trim()
+            : cachedPhone);
     final name = user.displayName?.trim().isNotEmpty == true
         ? user.displayName
-        : (fallbackName?.trim().isNotEmpty == true ? fallbackName!.trim() : null);
+        : (fallbackName?.trim().isNotEmpty == true
+            ? fallbackName!.trim()
+            : cachedName);
+
+    if (name != null && name.isNotEmpty) {
+      prefs?.setString('cached_name_${user.uid}', name);
+    }
+    if (phone != null && phone.isNotEmpty) {
+      prefs?.setString('cached_phone_${user.uid}', phone);
+    }
+
     return AuthUser(
       id: user.uid,
       email: user.email ?? '',
@@ -59,6 +127,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   Stream<AuthUser?> get users => _auth.userChanges().asyncMap(
         (user) => user == null ? null : _mapUserWithRole(user),
       );
+
 
   @override
   Future<AuthUser> login(LoginParams params) async {

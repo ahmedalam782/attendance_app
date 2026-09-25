@@ -61,9 +61,6 @@ class _RegisterBodyState extends State<RegisterBody> {
         );
   }
 
-  bool get _isRtl =>
-      Directionality.of(context) == TextDirection.ltr ||
-      context.locale.languageCode == 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +136,8 @@ class _RegisterBodyState extends State<RegisterBody> {
                             ),
                           ],
                         ),
-                        child: Icon(
-                          _isRtl
-                              ? Icons.arrow_forward_rounded
-                              : Icons.arrow_back_rounded,
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
                           color: AppColors.slate800,
                           size: 20,
                         ),

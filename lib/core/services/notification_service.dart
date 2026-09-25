@@ -2,7 +2,10 @@ import 'dart:developer';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:injectable/injectable.dart';
+
+import '../common/widgets/permission_confirmation_dialog.dart';
 
 @lazySingleton
 class NotificationService {
@@ -47,6 +50,25 @@ class NotificationService {
       if (kDebugMode) {
         log('Failed to initialize NotificationService: $e', stackTrace: st);
       }
+    }
+  }
+
+  Future<NotificationSettings?> requestPermissionWithConfirmation(
+    BuildContext context,
+  ) async {
+    final confirmed =
+        await PermissionConfirmationDialog.showNotificationPermission(context);
+    if (!confirmed) return null;
+
+    try {
+      return await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+    } catch (_) {
+      return null;
     }
   }
 

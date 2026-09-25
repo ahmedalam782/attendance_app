@@ -12,6 +12,8 @@ import '../../../../../core/theme/app_typography.dart';
 import 'package:attendance_app/features/auth/presentation/view_model/cubit/auth_cubit.dart';
 import 'package:attendance_app/features/home/data/app_bootstrap_impl.dart';
 import 'package:attendance_app/features/shared/widgets/app_logo.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Public body widget for [SplashPage] adhering to Al Faris presentation architecture.
 class SplashBody extends StatefulWidget {
@@ -65,25 +67,72 @@ class _SplashBodyState extends State<SplashBody>
     try {
       final bootstrap = AppBootstrapImpl();
       await Future.wait([
-        bootstrap.run(),
+        bootstrap.run().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {},
+        ),
         Future<void>.delayed(const Duration(milliseconds: 1400)),
       ]);
       if (!mounted) return;
+
       final authCubit = getIt<AuthCubit>();
-      final user = await authCubit.checkSession();
+      final user = await authCubit.checkSession().timeout(
+        const Duration(milliseconds: 2500),
+        onTimeout: () => null,
+      );
+
       if (!mounted) return;
-      if (user == null) {
-        context.router.replace(const AuthRoute());
-      } else if (user.isStaff) {
-        context.router.replace(const AdminLayoutRoute());
-      } else {
-        context.router.replace(const StudentLayoutRoute());
+
+      if (user != null) {
+        if (user.isStaff) {
+          context.router.replace(const AdminLayoutRoute());
+        } else {
+          context.router.replace(const StudentLayoutRoute());
+        }
+        return;
       }
+
+      // Offline resilience: if Firebase Auth has a cached session locally
+      final currentFirebaseUser = FirebaseAuth.instance.currentUser;
+      if (currentFirebaseUser != null) {
+        final prefs = getIt.isRegistered<SharedPreferences>()
+            ? getIt<SharedPreferences>()
+            : null;
+        final role = prefs?.getString('cached_role_${currentFirebaseUser.uid}') ?? 'student';
+        final isStaff = role == 'instructor' || role == 'admin';
+
+        if (isStaff) {
+          context.router.replace(const AdminLayoutRoute());
+        } else {
+          context.router.replace(const StudentLayoutRoute());
+        }
+        return;
+      }
+
+      context.router.replace(const AuthRoute());
     } catch (_) {
       if (!mounted) return;
+
+      final currentFirebaseUser = FirebaseAuth.instance.currentUser;
+      if (currentFirebaseUser != null) {
+        final prefs = getIt.isRegistered<SharedPreferences>()
+            ? getIt<SharedPreferences>()
+            : null;
+        final role = prefs?.getString('cached_role_${currentFirebaseUser.uid}') ?? 'student';
+        final isStaff = role == 'instructor' || role == 'admin';
+
+        if (isStaff) {
+          context.router.replace(const AdminLayoutRoute());
+        } else {
+          context.router.replace(const StudentLayoutRoute());
+        }
+        return;
+      }
+
       context.router.replace(const AuthRoute());
     }
   }
+
 
   @override
   void dispose() {

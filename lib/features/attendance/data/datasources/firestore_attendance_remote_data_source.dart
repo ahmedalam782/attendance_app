@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/utils/constants/firestore_paths.dart';
@@ -26,9 +27,25 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
     );
 
     final docRef = _firestore.doc(docPath);
-    final existingDoc = await docRef.get();
 
-    if (existingDoc.exists) {
+    // 1. Check local cache first (instant SQLite offline read)
+    DocumentSnapshot<Map<String, dynamic>>? existingDoc;
+    try {
+      existingDoc = await docRef
+          .get(const GetOptions(source: Source.cache))
+          .timeout(const Duration(milliseconds: 500));
+    } catch (_) {}
+
+    // 2. If not found in cache, check server with short timeout
+    if (existingDoc == null || !existingDoc.exists) {
+      try {
+        existingDoc = await docRef
+            .get()
+            .timeout(const Duration(milliseconds: 1500));
+      } catch (_) {}
+    }
+
+    if (existingDoc != null && existingDoc.exists) {
       throw FirebaseException(
         plugin: 'cloud_firestore',
         code: 'already-exists',
@@ -36,7 +53,11 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
       );
     }
 
+
     final scannedAt = params.actualScannedAt;
+    final effectiveScannedBy = params.scannedBy.trim().isNotEmpty
+        ? params.scannedBy.trim()
+        : (FirebaseAuth.instance.currentUser?.uid ?? params.studentId);
 
     final model = AttendanceModel(
       id: deterministicId,
@@ -45,7 +66,7 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
       studentId: params.studentId,
       studentName: params.studentName,
       scannedAt: scannedAt,
-      scannedBy: params.scannedBy,
+      scannedBy: effectiveScannedBy,
       method: params.method,
       status: params.status,
       isPendingSync: true,
@@ -55,14 +76,15 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
       FirestorePaths.programSession(params.programId, params.sessionId),
     );
 
-    final batch = _firestore.batch();
-    batch.set(docRef, model.toFirestore());
-    batch.update(sessionRef, {
-      'attendanceCount': FieldValue.increment(1),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    await docRef.set(model.toFirestore());
 
-    await batch.commit();
+    try {
+      await sessionRef.update({
+        'attendanceCount': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {}
+
     return model;
   }
 

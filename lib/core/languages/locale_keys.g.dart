@@ -216,6 +216,7 @@ abstract class  LocaleKeys {
   static const programs_show_qr = 'programs.show_qr';
   static const programs_qr_scan_instruction = 'programs.qr_scan_instruction';
   static const programs_qr_display_subtitle = 'programs.qr_display_subtitle';
+  static const programs_share_qr = 'programs.share_qr';
   static const programs = 'programs';
   static const sessions_create_title = 'sessions.create_title';
   static const sessions_create_subtitle = 'sessions.create_subtitle';
@@ -233,6 +234,16 @@ abstract class  LocaleKeys {
   static const sessions_close_session = 'sessions.close_session';
   static const sessions_session_opened = 'sessions.session_opened';
   static const sessions_session_closed = 'sessions.session_closed';
+  static const sessions_close_confirm_title = 'sessions.close_confirm_title';
+  static const sessions_close_confirm_desc = 'sessions.close_confirm_desc';
+  static const sessions_edit_session = 'sessions.edit_session';
+  static const sessions_edit_session_subtitle = 'sessions.edit_session_subtitle';
+  static const sessions_delete_session = 'sessions.delete_session';
+  static const sessions_delete_confirm_title = 'sessions.delete_confirm_title';
+  static const sessions_delete_confirm_desc = 'sessions.delete_confirm_desc';
+  static const sessions_deleted_success = 'sessions.deleted_success';
+  static const sessions_updated_success = 'sessions.updated_success';
+  static const sessions_submit_update = 'sessions.submit_update';
   static const sessions_empty_sessions = 'sessions.empty_sessions';
   static const sessions_empty_sessions_desc = 'sessions.empty_sessions_desc';
   static const sessions = 'sessions';
@@ -351,6 +362,9 @@ abstract class  LocaleKeys {
   static const csv_import_no_valid_records = 'csv_import.no_valid_records';
   static const csv_import_missing_name = 'csv_import.missing_name';
   static const csv_import_missing_id = 'csv_import.missing_id';
+  static const csv_import_download_template = 'csv_import.download_template';
+  static const csv_import_template_saved_success = 'csv_import.template_saved_success';
+  static const csv_import_sample_template_hint = 'csv_import.sample_template_hint';
   static const csv_import = 'csv_import';
   static const notifications_session_reminder_title = 'notifications.session_reminder_title';
   static const notifications_session_reminder_body = 'notifications.session_reminder_body';
@@ -370,6 +384,11 @@ abstract class  LocaleKeys {
   static const dynamic_qr_students_scanned_count = 'dynamic_qr.students_scanned_count';
   static const dynamic_qr_time_window_hint = 'dynamic_qr.time_window_hint';
   static const dynamic_qr_session_active_broadcast = 'dynamic_qr.session_active_broadcast';
+  static const dynamic_qr_anti_share_badge = 'dynamic_qr.anti_share_badge';
+  static const dynamic_qr_anti_share_desc = 'dynamic_qr.anti_share_desc';
+  static const dynamic_qr_force_refresh = 'dynamic_qr.force_refresh';
+  static const dynamic_qr_fullscreen_mode = 'dynamic_qr.fullscreen_mode';
+  static const dynamic_qr_exit_fullscreen = 'dynamic_qr.exit_fullscreen';
   static const dynamic_qr = 'dynamic_qr';
   static const self_check_in_scan_to_check_in = 'self_check_in.scan_to_check_in';
   static const self_check_in_scan_session_qr = 'self_check_in.scan_session_qr';
@@ -381,5 +400,20 @@ abstract class  LocaleKeys {
   static const self_check_in_not_enrolled_in_program = 'self_check_in.not_enrolled_in_program';
   static const self_check_in_already_checked_in = 'self_check_in.already_checked_in';
   static const self_check_in = 'self_check_in';
+  static const permissions_camera_title = 'permissions.camera_title';
+  static const permissions_camera_message = 'permissions.camera_message';
+  static const permissions_camera_feature_1 = 'permissions.camera_feature_1';
+  static const permissions_camera_feature_2 = 'permissions.camera_feature_2';
+  static const permissions_file_title = 'permissions.file_title';
+  static const permissions_file_message = 'permissions.file_message';
+  static const permissions_file_feature_1 = 'permissions.file_feature_1';
+  static const permissions_file_feature_2 = 'permissions.file_feature_2';
+  static const permissions_notifications_title = 'permissions.notifications_title';
+  static const permissions_notifications_message = 'permissions.notifications_message';
+  static const permissions_notifications_feature_1 = 'permissions.notifications_feature_1';
+  static const permissions_notifications_feature_2 = 'permissions.notifications_feature_2';
+  static const permissions_allow = 'permissions.allow';
+  static const permissions_deny = 'permissions.deny';
+  static const permissions = 'permissions';
 
 }

@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:screen_brightness/screen_brightness.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
 import '../../../../../core/common/widgets/centered_scroll_body.dart';
@@ -22,6 +28,7 @@ class StudentQrBody extends StatefulWidget {
 class _StudentQrBodyState extends State<StudentQrBody> {
   String? _token;
   double? _previousBrightness;
+  final _qrKey = GlobalKey();
 
   User? get _user => FirebaseAuth.instance.currentUser;
   String get _studentId => _user?.uid ?? 'guest';
@@ -44,6 +51,40 @@ class _StudentQrBodyState extends State<StudentQrBody> {
     if (mounted) {
       setState(() => _token = token);
     }
+  }
+
+  Future<void> _shareStudentQr() async {
+    if (_token == null) return;
+    final isArabic = context.locale.languageCode == 'ar';
+    final message = isArabic
+        ? 'بطاقة حضور الطالب: $_studentName\nالرقم التعريفي: $_studentId'
+        : 'Student Attendance Pass: $_studentName\nStudent ID: $_studentId';
+
+    try {
+      final boundary =
+          _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary != null) {
+        final image = await boundary.toImage(pixelRatio: 3.0);
+        final byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+        if (byteData != null) {
+          final pngBytes = byteData.buffer.asUint8List();
+          final dir = await getTemporaryDirectory();
+          final file = File('${dir.path}/student_qr_$_studentId.png');
+          await file.writeAsBytes(pngBytes, flush: true);
+
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(file.path)],
+              text: message,
+            ),
+          );
+          return;
+        }
+      }
+    } catch (_) {}
+
+    await SharePlus.instance.share(ShareParams(text: message));
   }
 
   Future<void> _increaseBrightness() async {
@@ -90,11 +131,31 @@ class _StudentQrBodyState extends State<StudentQrBody> {
                 const SizedBox(height: 24),
                 Center(
                   child: _token != null
-                      ? QrCard(
-                          token: _token!,
-                          studentName: _studentName,
-                          studentId: _studentId,
-                          size: 210,
+                      ? RepaintBoundary(
+                          key: _qrKey,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.cardSurface,
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            child: QrCard(
+                              token: _token!,
+                              studentName: _studentName,
+                              studentId: _studentId,
+                              size: 210,
+                              actions: [
+                                IconButton(
+                                  tooltip: LocaleKeys.roster_share_code.tr(),
+                                  icon: const Icon(
+                                    Icons.share_rounded,
+                                    size: 20,
+                                    color: AppColors.primary,
+                                  ),
+                                  onPressed: _shareStudentQr,
+                                ),
+                              ],
+                            ),
+                          ),
                         )
                       : Container(
                           width: 250,

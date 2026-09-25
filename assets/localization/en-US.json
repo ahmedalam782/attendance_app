@@ -228,7 +228,8 @@
     "or_scan_qr": "Or scan program QR code",
     "show_qr": "Show Program QR",
     "qr_scan_instruction": "Point the camera at the program invite QR",
-    "qr_display_subtitle": "Let students scan this QR code to join instantly"
+    "qr_display_subtitle": "Let students scan this QR code to join instantly",
+    "share_qr": "Share QR & Invite Code"
   },
   "sessions": {
     "create_title": "Schedule Session",
@@ -247,6 +248,16 @@
     "close_session": "Close Session",
     "session_opened": "Session is now open for attendance scanning",
     "session_closed": "Session has been closed",
+    "close_confirm_title": "Close Session?",
+    "close_confirm_desc": "Are you sure you want to close this session? Once closed, students will no longer be able to scan QR codes or check in.",
+    "edit_session": "Edit Session",
+    "edit_session_subtitle": "Update session title, date, timing, and grace period",
+    "delete_session": "Delete Session",
+    "delete_confirm_title": "Delete Session?",
+    "delete_confirm_desc": "Are you sure you want to delete '{title}'? All attendance records for this session will be permanently deleted.",
+    "deleted_success": "Session deleted successfully",
+    "updated_success": "Session updated successfully",
+    "submit_update": "Save Changes",
     "empty_sessions": "No sessions scheduled yet",
     "empty_sessions_desc": "Schedule sessions to start tracking student attendance."
   },
@@ -370,7 +381,10 @@
     "import_success": "Successfully enrolled {count} students",
     "no_valid_records": "No valid student records found in file",
     "missing_name": "Missing name",
-    "missing_id": "Missing student ID"
+    "missing_id": "Missing student ID",
+    "download_template": "Download CSV Template",
+    "template_saved_success": "CSV template saved successfully",
+    "sample_template_hint": "Download the standard template, fill in student details, and upload it here."
   },
   "notifications": {
     "session_reminder_title": "Upcoming Session",
@@ -392,7 +406,12 @@
     "keep_screen_on": "Keep screen on & max brightness",
     "students_scanned_count": "{count} Students Checked In",
     "time_window_hint": "Code refreshes automatically every 20s to prevent code sharing.",
-    "session_active_broadcast": "Live Session Broadcast"
+    "session_active_broadcast": "Live Session Broadcast",
+    "anti_share_badge": "Anti-Share Protection Active",
+    "anti_share_desc": "Code rotates dynamically every 20 seconds. Screenshots or photos forwarded to absent friends expire and cannot be scanned.",
+    "force_refresh": "Rotate QR Now",
+    "fullscreen_mode": "Fullscreen Projector",
+    "exit_fullscreen": "Exit Fullscreen"
   },
   "self_check_in": {
     "scan_to_check_in": "Scan to Check In",
@@ -404,5 +423,21 @@
     "session_closed": "This session is no longer active.",
     "not_enrolled_in_program": "You are not enrolled in this program.",
     "already_checked_in": "You have already checked in for this session."
+  },
+  "permissions": {
+    "camera_title": "Camera Permission Required",
+    "camera_message": "Attendance App requires access to your camera to scan QR codes for attendance check-ins and program registration.",
+    "camera_feature_1": "Quick QR code scanning",
+    "camera_feature_2": "No photos or personal media are stored",
+    "file_title": "Storage & Files Permission",
+    "file_message": "Attendance App requires access to your device files to select and import student rosters from CSV documents.",
+    "file_feature_1": "Select CSV files from your device",
+    "file_feature_2": "Only the selected file will be processed",
+    "notifications_title": "Notification Permission",
+    "notifications_message": "Enable notifications to stay updated with session reminders, schedule changes, and attendance confirmations.",
+    "notifications_feature_1": "Session start reminders",
+    "notifications_feature_2": "Instant attendance confirmation",
+    "allow": "Allow Access",
+    "deny": "Not Now"
   }
 }

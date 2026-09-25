@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
 import '../../../../../core/common/widgets/status_chip.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -117,35 +118,20 @@ class StudentRosterTile extends StatelessWidget {
     );
   }
 
-  void _confirmRemove(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(LocaleKeys.roster_remove_student.tr(), style: 16.bold),
-        content: Text(
-          LocaleKeys.roster_remove_student_confirm.tr(
-            namedArgs: {'name': student.name},
-          ),
-          style: 13.regular,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text(LocaleKeys.global_cancel.tr(), style: 13.medium),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogCtx).pop();
-              onRemove?.call();
-            },
-            child: Text(
-              LocaleKeys.roster_remove_student.tr(),
-              style: 13.bold.copyWith(color: AppColors.absent),
-            ),
-          ),
-        ],
+  Future<void> _confirmRemove(BuildContext context) async {
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: LocaleKeys.roster_remove_student.tr(),
+      message: LocaleKeys.roster_remove_student_confirm.tr(
+        namedArgs: {'name': student.name},
       ),
+      confirmLabel: LocaleKeys.roster_remove_student.tr(),
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.person_remove_rounded,
     );
+    if (confirmed == true) {
+      onRemove?.call();
+    }
   }
 }

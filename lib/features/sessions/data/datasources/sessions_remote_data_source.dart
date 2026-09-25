@@ -1,4 +1,6 @@
 import '../../domain/params/create_session_params.dart';
+import '../../domain/params/delete_session_params.dart';
+import '../../domain/params/update_session_params.dart';
 import '../../domain/params/update_session_status_params.dart';
 import '../models/session_model.dart';
 
@@ -8,4 +10,8 @@ abstract class SessionsRemoteDataSource {
   Future<SessionModel> createSession(CreateSessionParams params);
 
   Future<void> updateSessionStatus(UpdateSessionStatusParams params);
+
+  Future<void> deleteSession(DeleteSessionParams params);
+
+  Future<SessionModel> updateSession(UpdateSessionParams params);
 }

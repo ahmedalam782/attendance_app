@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/empty_state_card.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
@@ -18,11 +19,15 @@ import '../../../../enrollment/presentation/view_model/cubit/enrollment_cubit.da
 import '../../../../enrollment/presentation/view_model/cubit/enrollment_state.dart';
 import '../../../domain/entities/program.dart';
 import '../../../../sessions/domain/entities/session.dart';
+import '../../../../sessions/domain/params/delete_session_params.dart';
 import '../../../../sessions/domain/params/update_session_status_params.dart';
 import '../../../../sessions/presentation/view/widgets/create_session_sheet.dart';
+import '../../../../sessions/presentation/view/widgets/dynamic_session_qr_sheet.dart';
+import '../../../../sessions/presentation/view/widgets/edit_session_sheet.dart';
 import '../../../../sessions/presentation/view/widgets/session_card.dart';
 import '../../../../sessions/presentation/view_model/cubit/sessions_cubit.dart';
 import '../../../../sessions/presentation/view_model/cubit/sessions_state.dart';
+import '../../../../student/presentation/view/widgets/student_scanner_sheet.dart';
 
 class ProgramDetailsBody extends StatefulWidget {
   const ProgramDetailsBody({
@@ -46,7 +51,9 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
   void initState() {
     super.initState();
     context.read<SessionsCubit>().watchSessions(widget.program.id);
-    context.read<EnrollmentCubit>().watchProgramStudents(widget.program.id);
+    if (widget.isAdmin) {
+      context.read<EnrollmentCubit>().watchProgramStudents(widget.program.id);
+    }
   }
 
   @override
@@ -85,14 +92,85 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
     );
   }
 
-  void _onStatusChange(String sessionId, String newStatus) {
-    context.read<SessionsCubit>().updateStatus(
+  void _openDynamicSessionQr(Session session) {
+    DynamicSessionQrSheet.show(
+      context,
+      session: session,
+      programTitle: widget.program.title,
+    );
+  }
+
+  Future<void> _onStatusChange(String sessionId, String newStatus) async {
+    if (newStatus == 'closed') {
+      final confirmed = await CustomConfirmationBottomSheet.show(
+        context,
+        title: LocaleKeys.sessions_close_confirm_title.tr(),
+        message: LocaleKeys.sessions_close_confirm_desc.tr(),
+        confirmLabel: LocaleKeys.sessions_close_session.tr(),
+        cancelLabel: LocaleKeys.global_cancel.tr(),
+        isDestructive: true,
+        icon: Icons.stop_circle_outlined,
+      );
+      if (confirmed != true || !mounted) return;
+    }
+
+    if (!mounted) return;
+    final success = await context.read<SessionsCubit>().updateStatus(
           UpdateSessionStatusParams(
             programId: widget.program.id,
             sessionId: sessionId,
             status: newStatus,
           ),
         );
+
+    if (success && newStatus == 'open' && mounted) {
+      final session = context
+          .read<SessionsCubit>()
+          .state
+          .sessions
+          .where((s) => s.id == sessionId)
+          .firstOrNull;
+      if (session != null && mounted) {
+        _openDynamicSessionQr(session.copyWith(status: 'open'));
+      }
+    }
+  }
+
+  Future<void> _openEditSession(Session session) async {
+    await EditSessionSheet.show(
+      context,
+      programId: widget.program.id,
+      session: session,
+    );
+  }
+
+  Future<void> _confirmDeleteSession(Session session) async {
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: LocaleKeys.sessions_delete_confirm_title.tr(),
+      message: LocaleKeys.sessions_delete_confirm_desc.tr(
+        namedArgs: {'title': session.title},
+      ),
+      confirmLabel: LocaleKeys.sessions_delete_session.tr(),
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    final success = await context.read<SessionsCubit>().deleteSession(
+          DeleteSessionParams(
+            programId: widget.program.id,
+            sessionId: session.id,
+          ),
+        );
+    if (success && mounted) {
+      CustomToast(
+        context: context,
+        header: LocaleKeys.sessions_deleted_success.tr(),
+        type: ToastificationType.success,
+      ).showToast();
+    }
   }
 
   Color get _typeColor {
@@ -233,37 +311,39 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
                       ),
                       const SizedBox(height: 18),
 
-                      // Segmented Tab Switcher (Sessions vs Students)
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColors.slate100,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.slate200),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildSegmentButton(
-                                index: 0,
-                                title: LocaleKeys.programs_tab_sessions.tr(),
-                                icon: Icons.event_note_rounded,
+                      // Segmented Tab Switcher (Sessions vs Students) - Admin only
+                      if (widget.isAdmin) ...[
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.slate100,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.slate200),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildSegmentButton(
+                                  index: 0,
+                                  title: LocaleKeys.programs_tab_sessions.tr(),
+                                  icon: Icons.event_note_rounded,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: _buildSegmentButton(
-                                index: 1,
-                                title: LocaleKeys.programs_tab_students.tr(),
-                                icon: Icons.people_alt_rounded,
+                              Expanded(
+                                child: _buildSegmentButton(
+                                  index: 1,
+                                  title: LocaleKeys.programs_tab_students.tr(),
+                                  icon: Icons.people_alt_rounded,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
+                        const SizedBox(height: 18),
+                      ],
 
                       // Active Tab Content
-                      if (_selectedTabIndex == 0)
+                      if (!widget.isAdmin || _selectedTabIndex == 0)
                         _buildSessionsSection()
                       else
                         _buildStudentsSection(),
@@ -382,9 +462,17 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
                 return SessionCard(
                   session: session,
                   isAdmin: widget.isAdmin,
-                  onTap: () => _openSessionAttendance(session),
-                  onStatusChanged: (newStatus) =>
-                      _onStatusChange(session.id, newStatus),
+                  onTap: widget.isAdmin
+                      ? () => _openSessionAttendance(session)
+                      : (session.isOpen
+                          ? () => StudentScannerSheet.show(context)
+                          : null),
+                  onStatusChanged: widget.isAdmin
+                      ? (newStatus) => _onStatusChange(session.id, newStatus)
+                      : null,
+                  onShowQr: widget.isAdmin ? () => _openDynamicSessionQr(session) : null,
+                  onEdit: widget.isAdmin ? () => _openEditSession(session) : null,
+                  onDelete: widget.isAdmin ? () => _confirmDeleteSession(session) : null,
                 );
               },
             );
