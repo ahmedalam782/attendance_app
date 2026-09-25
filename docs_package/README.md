@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/Security-Ed25519%20%2B%20HMAC-00C853?style=for-the-badge" alt="Security" />
   <img src="https://img.shields.io/badge/Tests-37%2F37%20Passing-brightgreen?style=for-the-badge" alt="Tests" />
   <img src="https://img.shields.io/badge/Localization-Arabic%20RTL%20%7C%20English-E91E63?style=for-the-badge" alt="i18n" />
+  <a href="https://trello.com/b/Cju0jmDo/smart-attendance-app"><img src="https://img.shields.io/badge/Trello-Agile%20Board-0079BF?logo=trello&logoColor=white&style=for-the-badge" alt="Trello Board" /></a>
 </p>
 
 ---
@@ -151,6 +152,20 @@ attendance/{sessionId_studentId}
 
 ---
 
+# 📌 STAGE 3 — Agile Project Management (Trello Board)
+
+All **18 User Stories** across Sprints 1, 2, and 3 are mapped, tracked, and verified on the live Trello board:
+
+* 🌐 **Live Trello Board:** [Smart Attendance App Workspace](https://trello.com/b/Cju0jmDo/smart-attendance-app)
+* 📥 **Importable CSV Ledger:** [`docs_package/trello_import.csv`](docs_package/trello_import.csv) (18 User Stories ready for import)
+
+### Sprint Mapping:
+* **Sprint 1 (Foundations & Core Setup):** `US-1.1` to `US-1.6` (Multi-Role Auth, Program Creation, QR Display, Join Flow, RTL Arabic Localization)
+* **Sprint 2 (Attendance & Cryptography):** `US-2.1` to `US-2.6` (Ed25519 Engine, Offline Badges, Dynamic Projector QR, Scanner Overlays)
+* **Sprint 3 (Lifecycle, Analytics & Hardening):** `US-3.1` to `US-3.6` (Session Transitions, Auto-Absence, Roster Controls, Batch CSV, KPI Dashboards, Security Rules)
+
+---
+
 # 🏗️ Technical Architecture & Engineering
 
 ```
@@ -224,6 +239,7 @@ flutter build apk --debug
 | **Complete Zip Archive** | [attendance_app_project_package.zip](file:///d:/Elevate/attendance_app/attendance_app_project_package.zip) | Bundled archive containing all specs, BRD, PRD, and Trello CSV. |
 | **Stage 1 (BRD)** | [STAGE_1_BRD.md](file:///d:/Elevate/attendance_app/docs_package/STAGE_1_BRD.md) | Business Requirements Document and measurable KPIs. |
 | **Stage 2 (PRD)** | [STAGE_2_PRD.md](file:///d:/Elevate/attendance_app/docs_package/STAGE_2_PRD.md) | Product Requirements Document, user stories, and acceptance criteria. |
+| **Stage 3 (Live Trello Board)** | [Smart Attendance App Workspace](https://trello.com/b/Cju0jmDo/smart-attendance-app) | Live interactive Trello board tracking all 18 User Stories across Sprints 1–3. |
 | **Stage 3 (Trello CSV)** | [trello_import.csv](file:///d:/Elevate/attendance_app/docs_package/trello_import.csv) | Direct-import CSV file for Trello (18 stories across 3 sprints). |
 | **Engineering Walkthrough** | [WALKTHROUGH.md](file:///d:/Elevate/attendance_app/docs_package/WALKTHROUGH.md) | Technical verification report, test outputs, and architecture notes. |
 
