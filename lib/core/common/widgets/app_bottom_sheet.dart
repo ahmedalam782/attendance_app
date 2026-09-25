@@ -177,7 +177,7 @@ class AppSheetPadding extends StatelessWidget {
     super.key,
     required this.child,
     this.horizontal = 20.0,
-    this.topExtra = 34.0,
+    this.topExtra = 48.0,
   });
 
   final Widget child;

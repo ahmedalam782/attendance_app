@@ -10,7 +10,7 @@ import '../../../../../core/common/widgets/status_chip.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
-import '../../../../auth/presentation/view_model/cubit/auth_cubit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../enrollment/domain/entities/enrolled_student.dart';
 import '../../../../enrollment/presentation/view_model/cubit/enrollment_cubit.dart';
 import '../../../../enrollment/presentation/view_model/cubit/enrollment_state.dart';
@@ -82,7 +82,6 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
       context,
       builder: (bottomSheetContext) {
         return AppSheetPadding(
-          topExtra: 24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,8 +176,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
   }
 
   void _markStatus(EnrolledStudent student, String newStatus) {
-    final adminUser = context.read<AuthCubit>().state.authState.data;
-    final scannedBy = adminUser?.id ?? 'admin';
+    final scannedBy = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
 
     context.read<AttendanceCubit>().recordManualAttendance(
           RecordAttendanceParams(
@@ -223,8 +221,8 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
           TextButton(
             onPressed: () async {
               Navigator.of(dialogCtx).pop();
-              final adminUser = context.read<AuthCubit>().state.authState.data;
-              final scannedBy = adminUser?.id ?? 'admin';
+              final scannedBy =
+                  FirebaseAuth.instance.currentUser?.uid ?? 'admin';
               final names = {for (final s in unmarkedStudents) s.id: s.name};
               final count = await context
                   .read<AttendanceCubit>()
@@ -262,7 +260,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 48),
       child: Column(
         children: [
 
@@ -278,12 +276,12 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                       Text(
                         widget.session.title,
                         style: 18.bold.copyWith(color: AppColors.slate900),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${DateFormat('EEE, MMM d').format(widget.session.startAt)} â€¢ ${timeFormat.format(widget.session.startAt)}',
+                        '${DateFormat('EEE, MMM d').format(widget.session.startAt)} • ${timeFormat.format(widget.session.startAt)}',
                         style: 12.medium.copyWith(color: AppColors.slate500),
                       ),
                     ],
@@ -372,13 +370,16 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                             ),
                             child: Row(
                               children: [
-                                Text(
-                                  '${students.length} students â€¢ ${unmarked.length} unmarked',
-                                  style: 12.medium.copyWith(
-                                    color: AppColors.slate500,
+                                Flexible(
+                                  child: Text(
+                                    '${students.length} students • ${unmarked.length} unmarked',
+                                    style: 12.medium.copyWith(
+                                      color: AppColors.slate500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Spacer(),
+                                const SizedBox(width: 8),
                                 TextButton.icon(
                                   onPressed: () =>
                                       _confirmMarkAllAbsent(unmarked),
@@ -460,18 +461,24 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                                       const SizedBox(height: 2),
                                       Row(
                                         children: [
-                                          Text(
-                                            student.id,
-                                            style: 11.medium.copyWith(
-                                              color: AppColors.slate500,
+                                          Flexible(
+                                            child: Text(
+                                              student.id,
+                                              style: 11.medium.copyWith(
+                                                color: AppColors.slate500,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           if (record != null) ...[
                                             const SizedBox(width: 6),
-                                            Text(
-                                              'â€¢ ${DateFormat('h:mm a').format(record.scannedAt)}',
-                                              style: 11.regular.copyWith(
-                                                color: AppColors.slate400,
+                                            Flexible(
+                                              child: Text(
+                                                '• ${DateFormat('h:mm a').format(record.scannedAt)}',
+                                                style: 11.regular.copyWith(
+                                                  color: AppColors.slate400,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                             const SizedBox(width: 6),

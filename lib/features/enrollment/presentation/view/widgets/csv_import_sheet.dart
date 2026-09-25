@@ -97,7 +97,7 @@ class _CsvImportSheetState extends State<CsvImportSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 48),
       child: Column(
         children: [
           // Header
