@@ -221,7 +221,12 @@ service cloud.firestore {
 
       // 4. Admins / staff can delete invite codes
       allow delete: if isAuthenticated()
-        && (isStaff() || isAppAdmin() || isGlobalAdmin());
+        && (
+          isStaff()
+          || isAppAdmin()
+          || isGlobalAdmin()
+          || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid)
+        );
     }
   }
 }
