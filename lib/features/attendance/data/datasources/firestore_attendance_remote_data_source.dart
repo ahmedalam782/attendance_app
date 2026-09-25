@@ -45,15 +45,6 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
       } catch (_) {}
     }
 
-    if (existingDoc != null && existingDoc.exists) {
-      throw FirebaseException(
-        plugin: 'cloud_firestore',
-        code: 'already-exists',
-        message: 'Student already checked in for this session',
-      );
-    }
-
-
     final scannedAt = params.actualScannedAt;
     final effectiveScannedBy = params.scannedBy.trim().isNotEmpty
         ? params.scannedBy.trim()
@@ -75,6 +66,44 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
     final sessionRef = _firestore.doc(
       FirestorePaths.programSession(params.programId, params.sessionId),
     );
+
+    if (existingDoc != null && existingDoc.exists) {
+      if (params.method == 'manual') {
+        final oldData = existingDoc.data() ?? {};
+        final oldStatus = oldData['status'] as String? ?? '';
+        final wasAttended = oldStatus == 'present' || oldStatus == 'late';
+        final isAttended = params.status == 'present' || params.status == 'late';
+
+        await docRef.set({
+          ...model.toFirestore(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        if (!wasAttended && isAttended) {
+          try {
+            await sessionRef.update({
+              'attendanceCount': FieldValue.increment(1),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          } catch (_) {}
+        } else if (wasAttended && !isAttended) {
+          try {
+            await sessionRef.update({
+              'attendanceCount': FieldValue.increment(-1),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          } catch (_) {}
+        }
+
+        return model;
+      }
+
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'already-exists',
+        message: 'Student already checked in for this session',
+      );
+    }
 
     await docRef.set(model.toFirestore());
 

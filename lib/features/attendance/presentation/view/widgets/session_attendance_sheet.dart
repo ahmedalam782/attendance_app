@@ -101,7 +101,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
               ),
               const SizedBox(height: 18),
               _buildStatusOption(
-                context,
+                bottomSheetContext,
                 title: LocaleKeys.session_attendance_status_present.tr(),
                 status: 'present',
                 color: AppColors.present,
@@ -110,7 +110,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
               ),
               const SizedBox(height: 8),
               _buildStatusOption(
-                context,
+                bottomSheetContext,
                 title: LocaleKeys.session_attendance_status_late.tr(),
                 status: 'late',
                 color: AppColors.late,
@@ -119,7 +119,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
               ),
               const SizedBox(height: 8),
               _buildStatusOption(
-                context,
+                bottomSheetContext,
                 title: LocaleKeys.session_attendance_status_excused.tr(),
                 status: 'excused',
                 color: AppColors.excused,
@@ -128,7 +128,7 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
               ),
               const SizedBox(height: 8),
               _buildStatusOption(
-                context,
+                bottomSheetContext,
                 title: LocaleKeys.session_attendance_status_absent.tr(),
                 status: 'absent',
                 color: AppColors.absent,
