@@ -16,6 +16,7 @@ class SessionCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onShowQr,
+    this.onScanBadges,
   });
 
   final Session session;
@@ -25,6 +26,7 @@ class SessionCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onShowQr;
+  final VoidCallback? onScanBadges;
 
   Color get _statusColor {
     if (session.isOpen) return AppColors.present;
@@ -308,6 +310,27 @@ class SessionCard extends StatelessWidget {
                         runSpacing: 8,
                         alignment: WrapAlignment.end,
                         children: [
+                          if (onScanBadges != null)
+                            ElevatedButton.icon(
+                              onPressed: onScanBadges,
+                              icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                              label: Text(
+                                LocaleKeys.admin_scanner_open_camera.tr(),
+                                style: 12.bold,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.present,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
                           if (onShowQr != null)
                             ElevatedButton.icon(
                               onPressed: onShowQr,

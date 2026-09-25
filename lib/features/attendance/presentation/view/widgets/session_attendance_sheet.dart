@@ -22,6 +22,7 @@ import '../../../domain/entities/attendance_record.dart';
 import '../../../domain/params/record_attendance_params.dart';
 import '../../view_model/cubit/attendance_cubit.dart';
 import '../../view_model/cubit/attendance_state.dart';
+import 'admin_session_scanner_sheet.dart';
 
 class SessionAttendanceSheet extends StatefulWidget {
   const SessionAttendanceSheet({
@@ -275,6 +276,20 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                   ),
                 ),
                 if (widget.isAdmin && widget.session.isOpen) ...[
+                  IconButton(
+                    onPressed: () => AdminSessionScannerSheet.show(
+                      context,
+                      session: widget.session,
+                      program: widget.program,
+                    ),
+                    icon: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: AppColors.present,
+                      size: 22,
+                    ),
+                    tooltip: LocaleKeys.admin_scanner_open_camera.tr(),
+                  ),
+                  const SizedBox(width: 4),
                   IconButton(
                     onPressed: () => DynamicSessionQrSheet.show(
                       context,

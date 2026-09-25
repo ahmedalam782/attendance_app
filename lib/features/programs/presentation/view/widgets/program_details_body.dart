@@ -14,6 +14,7 @@ import '../../../../../core/common/widgets/empty_state_card.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../attendance/presentation/view/widgets/admin_session_scanner_sheet.dart';
 import '../../../../attendance/presentation/view/widgets/session_attendance_sheet.dart';
 import '../../../../enrollment/presentation/view/widgets/add_student_sheet.dart';
 import '../../../../enrollment/presentation/view/widgets/csv_import_sheet.dart';
@@ -105,6 +106,14 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
       context,
       session: session,
       programTitle: widget.program.title,
+    );
+  }
+
+  void _openAdminScanner(Session session) {
+    AdminSessionScannerSheet.show(
+      context,
+      session: session,
+      program: widget.program,
     );
   }
 
@@ -482,6 +491,7 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
                       ? (newStatus) => _onStatusChange(session.id, newStatus)
                       : null,
                   onShowQr: widget.isAdmin ? () => _openDynamicSessionQr(session) : null,
+                  onScanBadges: widget.isAdmin ? () => _openAdminScanner(session) : null,
                   onEdit: widget.isAdmin ? () => _openEditSession(session) : null,
                   onDelete: widget.isAdmin ? () => _confirmDeleteSession(session) : null,
                 );

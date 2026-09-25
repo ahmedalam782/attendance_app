@@ -114,7 +114,6 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
                           .collection('programs')
                           .doc(program.id)
                           .collection('sessions')
-                          .orderBy('startAt', descending: true)
                           .get(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -125,10 +124,25 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
                             ),
                           );
                         }
-                        final docs = snapshot.data?.docs ?? [];
-                        if (docs.isEmpty) {
-                          return const SizedBox.shrink();
+                        final rawDocs = snapshot.data?.docs ?? [];
+                        if (rawDocs.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 4,
+                            ),
+                            child: Text(
+                              '${program.title}: ${LocaleKeys.sessions_empty_sessions.tr()}',
+                              style: 12.regular.copyWith(color: AppColors.slate400),
+                            ),
+                          );
                         }
+                        final docs = rawDocs.toList()
+                          ..sort((a, b) {
+                            final aStart = (a.data()['startAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+                            final bStart = (b.data()['startAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+                            return bStart.compareTo(aStart);
+                          });
                         final sessions = docs
                             .map((d) => SessionModel.fromFirestore(d, program.id).toEntity())
                             .toList();
