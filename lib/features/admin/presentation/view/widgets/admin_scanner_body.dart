@@ -309,16 +309,6 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
                                           ],
                                         ),
                                       ),
-                                      IconButton(
-                                        onPressed: () => context
-                                            .read<AttendanceCubit>()
-                                            .setActiveSession(null),
-                                        icon: const Icon(
-                                          Icons.close_rounded,
-                                          size: 18,
-                                          color: AppColors.slate400,
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ] else ...[
