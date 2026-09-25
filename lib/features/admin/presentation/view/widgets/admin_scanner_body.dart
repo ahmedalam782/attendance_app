@@ -1,22 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
+import '../../../../../core/common/widgets/app_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
+import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/feature_page_header.dart';
 import '../../../../../core/common/widgets/pending_sync_badge.dart';
 import '../../../../../core/common/widgets/permission_confirmation_dialog.dart';
+import '../../../../../core/common/widgets/status_chip.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../attendance/presentation/view/widgets/scan_feedback_overlay.dart';
 import '../../../../attendance/presentation/view_model/cubit/attendance_cubit.dart';
 import '../../../../attendance/presentation/view_model/cubit/attendance_state.dart';
+import '../../../../programs/domain/entities/program.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_state.dart';
+import '../../../../sessions/data/models/session_model.dart';
 
 class AdminScannerBody extends StatefulWidget {
   const AdminScannerBody({super.key});
@@ -32,6 +39,8 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
 
   String get _adminUid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
+  bool _isAutoDetecting = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +49,190 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
     }
   }
 
+  Future<void> _autoDetectOpenSession(List<Program> programs) async {
+    if (_isAutoDetecting) return;
+    final cubit = context.read<AttendanceCubit>();
+    if (cubit.state.activeSession != null || programs.isEmpty) return;
+
+    _isAutoDetecting = true;
+    try {
+      for (final program in programs) {
+        final snap = await FirebaseFirestore.instance
+            .collection('programs')
+            .doc(program.id)
+            .collection('sessions')
+            .where('status', isEqualTo: 'open')
+            .limit(1)
+            .get();
+
+        if (snap.docs.isNotEmpty && mounted && cubit.state.activeSession == null) {
+          final session = SessionModel.fromFirestore(snap.docs.first, program.id).toEntity();
+          cubit.setActiveSession(session);
+          break;
+        }
+      }
+    } catch (_) {
+    } finally {
+      _isAutoDetecting = false;
+    }
+  }
+
+  Future<void> _showSessionPicker(
+    BuildContext context,
+    List<Program> programs,
+  ) async {
+    if (programs.isEmpty) {
+      CustomToast(
+        context: context,
+        header: LocaleKeys.attendance_no_open_sessions.tr(),
+        type: ToastificationType.warning,
+      ).showToast();
+      return;
+    }
+
+    await showAppSheet<void>(
+      context,
+      builder: (sheetContext) {
+        return AppSheetPadding(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppSheetHeader(
+                title: LocaleKeys.attendance_select_session_hint.tr(),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: programs.length,
+                  separatorBuilder: (_, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, pIndex) {
+                    final program = programs[pIndex];
+                    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      future: FirebaseFirestore.instance
+                          .collection('programs')
+                          .doc(program.id)
+                          .collection('sessions')
+                          .orderBy('startAt', descending: true)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        }
+                        final docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        final sessions = docs
+                            .map((d) => SessionModel.fromFirestore(d, program.id).toEntity())
+                            .toList();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4,
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                program.title,
+                                style: 13.bold.copyWith(color: AppColors.slate700),
+                              ),
+                            ),
+                            ...sessions.map((session) {
+                              final isOpen = session.isOpen;
+                              return InkWell(
+                                onTap: () {
+                                  this
+                                      .context
+                                      .read<AttendanceCubit>()
+                                      .setActiveSession(session);
+                                  Navigator.of(sheetContext).pop();
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isOpen
+                                        ? AppColors.emeraldLight
+                                        : AppColors.slate100,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isOpen
+                                          ? AppColors.present.withValues(alpha: 0.3)
+                                          : AppColors.slate200,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isOpen
+                                            ? Icons.check_circle_rounded
+                                            : Icons.schedule_rounded,
+                                        size: 18,
+                                        color: isOpen
+                                            ? AppColors.present
+                                            : AppColors.slate500,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          session.title,
+                                          style: 14.bold.copyWith(
+                                            color: AppColors.slate900,
+                                          ),
+                                        ),
+                                      ),
+                                      StatusChip.fromString(session.status),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleStartCamera() async {
+    final attendanceState = context.read<AttendanceCubit>().state;
+    if (attendanceState.activeSession == null) {
+      final programs = context.read<ProgramsCubit>().state.programs;
+      await _autoDetectOpenSession(programs);
+      if (mounted && context.read<AttendanceCubit>().state.activeSession == null) {
+        await _showSessionPicker(context, programs);
+        if (mounted && context.read<AttendanceCubit>().state.activeSession == null) {
+          CustomToast(
+            context: context,
+            header: LocaleKeys.attendance_no_open_sessions.tr(),
+            type: ToastificationType.warning,
+          ).showToast();
+          return;
+        }
+      }
+    }
+    if (!mounted) return;
     final confirmed = await PermissionConfirmationDialog.showCameraPermission(context);
     if (!confirmed || !mounted) return;
     _startCamera();
@@ -113,6 +305,16 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
   ) {
     return BlocBuilder<ProgramsCubit, ProgramsState>(
       builder: (context, programsState) {
+        if (attendanceState.activeSession == null &&
+            programsState.programs.isNotEmpty &&
+            !_isAutoDetecting) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _autoDetectOpenSession(programsState.programs);
+            }
+          });
+        }
+
         return Padding(
           padding: const EdgeInsets.all(20),
           child: LayoutBuilder(
@@ -135,96 +337,132 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
                         const SizedBox(height: 20),
 
                         // Active Session Selector Card
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.cardSurface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.slate200),
+                        InkWell(
+                          onTap: () => _showSessionPicker(
+                            context,
+                            programsState.programs,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                LocaleKeys.attendance_active_session.tr(),
-                                style: 12.bold.copyWith(color: AppColors.slate500),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: attendanceState.activeSession != null
+                                    ? AppColors.present.withValues(alpha: 0.3)
+                                    : AppColors.slate200,
                               ),
-                              const SizedBox(height: 8),
-                              if (attendanceState.activeSession != null) ...[
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.emeraldLight,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.event_available_rounded,
-                                        size: 18,
-                                        color: AppColors.present,
-                                      ),
+                                    Text(
+                                      LocaleKeys.attendance_active_session.tr(),
+                                      style: 12.bold
+                                          .copyWith(color: AppColors.slate500),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            attendanceState.activeSession!.title,
-                                            style: 15.bold.copyWith(
-                                              color: AppColors.slate900,
-                                            ),
-                                          ),
-                                          Text(
-                                            LocaleKeys.attendance_scanned_count
-                                                .tr(
-                                              namedArgs: {
-                                                'count': attendanceState
-                                                    .scanCount
-                                                    .toString(),
-                                              },
-                                            ),
-                                            style: 12.medium.copyWith(
-                                              color: AppColors.present,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    const Spacer(),
+                                    Icon(
+                                      Icons.touch_app_rounded,
+                                      size: 14,
+                                      color: AppColors.primary,
                                     ),
-                                    IconButton(
-                                      onPressed: () => context
-                                          .read<AttendanceCubit>()
-                                          .setActiveSession(null),
-                                      icon: const Icon(
-                                        Icons.edit_outlined,
-                                        size: 18,
-                                        color: AppColors.slate400,
-                                      ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      LocaleKeys.attendance_select_session_hint.tr(),
+                                      style: 11.medium
+                                          .copyWith(color: AppColors.primary),
                                     ),
                                   ],
                                 ),
-                              ] else ...[
-                                Text(
-                                  programsState.programs.isEmpty
-                                      ? LocaleKeys.attendance_no_open_sessions.tr()
-                                      : LocaleKeys.attendance_select_session_hint
-                                          .tr(),
-                                  style: 13.regular
-                                      .copyWith(color: AppColors.slate600),
-                                ),
-                                if (programsState.programs.isNotEmpty) ...[
-                                  const SizedBox(height: 10),
+                                const SizedBox(height: 8),
+                                if (attendanceState.activeSession != null) ...[
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.emeraldLight,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.event_available_rounded,
+                                          size: 18,
+                                          color: AppColors.present,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              attendanceState.activeSession!.title,
+                                              style: 15.bold.copyWith(
+                                                color: AppColors.slate900,
+                                              ),
+                                            ),
+                                            Text(
+                                              LocaleKeys.attendance_scanned_count
+                                                  .tr(
+                                                namedArgs: {
+                                                  'count': attendanceState
+                                                      .scanCount
+                                                      .toString(),
+                                                },
+                                              ),
+                                              style: 12.medium.copyWith(
+                                                color: AppColors.present,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () => context
+                                            .read<AttendanceCubit>()
+                                            .setActiveSession(null),
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          size: 18,
+                                          color: AppColors.slate400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ] else ...[
                                   Text(
-                                    LocaleKeys.attendance_no_open_sessions.tr(),
-                                    style: 12.medium.copyWith(
-                                      color: AppColors.slate500,
-                                    ),
+                                    programsState.programs.isEmpty
+                                        ? LocaleKeys.attendance_no_open_sessions.tr()
+                                        : LocaleKeys.attendance_select_session_hint
+                                            .tr(),
+                                    style: 13.regular
+                                        .copyWith(color: AppColors.slate600),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline_rounded,
+                                        size: 14,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        LocaleKeys.attendance_select_session_hint.tr(),
+                                        style: 12.medium.copyWith(
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
 

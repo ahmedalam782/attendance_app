@@ -74,6 +74,9 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
     context
         .read<AttendanceCubit>()
         .watchSessionAttendance(widget.program.id, widget.session.id);
+    if (widget.isAdmin) {
+      context.read<AttendanceCubit>().setActiveSession(widget.session);
+    }
   }
 
   void _onStudentTap(EnrolledStudent student, AttendanceRecord? existingRecord) {

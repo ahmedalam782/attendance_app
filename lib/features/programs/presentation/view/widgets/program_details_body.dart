@@ -1,8 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
+
+import '../../view_model/cubit/programs_cubit.dart';
 
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
 import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
@@ -53,6 +56,11 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
     context.read<SessionsCubit>().watchSessions(widget.program.id);
     if (widget.isAdmin) {
       context.read<EnrollmentCubit>().watchProgramStudents(widget.program.id);
+    } else {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null && uid.isNotEmpty) {
+        context.read<ProgramsCubit>().watchStudentPrograms(uid);
+      }
     }
   }
 
@@ -465,7 +473,10 @@ class _ProgramDetailsBodyState extends State<ProgramDetailsBody> {
                   onTap: widget.isAdmin
                       ? () => _openSessionAttendance(session)
                       : (session.isOpen
-                          ? () => StudentScannerSheet.show(context)
+                          ? () => StudentScannerSheet.show(
+                                context,
+                                programId: widget.program.id,
+                              )
                           : null),
                   onStatusChanged: widget.isAdmin
                       ? (newStatus) => _onStatusChange(session.id, newStatus)

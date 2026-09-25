@@ -15,9 +15,14 @@ import '../../../../attendance/presentation/view_model/cubit/attendance_state.da
 import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 
 class StudentScannerSheet extends StatefulWidget {
-  const StudentScannerSheet({super.key});
+  const StudentScannerSheet({super.key, this.programId});
 
-  static Future<void> show(BuildContext context) async {
+  final String? programId;
+
+  static Future<void> show(
+    BuildContext context, {
+    String? programId,
+  }) async {
     final confirmed = await PermissionConfirmationDialog.showCameraPermission(
       context,
     );
@@ -32,7 +37,7 @@ class StudentScannerSheet extends StatefulWidget {
           BlocProvider.value(value: context.read<AttendanceCubit>()),
           BlocProvider.value(value: context.read<ProgramsCubit>()),
         ],
-        child: const StudentScannerSheet(),
+        child: StudentScannerSheet(programId: programId),
       ),
     );
   }
@@ -58,6 +63,9 @@ class _StudentScannerSheetState extends State<StudentScannerSheet>
   @override
   void initState() {
     super.initState();
+    if (_studentId.isNotEmpty) {
+      context.read<ProgramsCubit>().watchStudentPrograms(_studentId);
+    }
     _scannerController = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
       facing: CameraFacing.back,
@@ -86,14 +94,17 @@ class _StudentScannerSheetState extends State<StudentScannerSheet>
 
         final enrolledPrograms =
             context.read<ProgramsCubit>().state.programs;
-        final enrolledProgramIds = enrolledPrograms.map((p) => p.id).toList();
+        final enrolledProgramIds = enrolledPrograms.map((p) => p.id).toSet();
+        if (widget.programId != null && widget.programId!.isNotEmpty) {
+          enrolledProgramIds.add(widget.programId!);
+        }
 
         final success =
             await context.read<AttendanceCubit>().processSelfCheckIn(
                   rawCode: code,
                   studentId: _studentId,
                   studentName: _studentName,
-                  enrolledProgramIds: enrolledProgramIds,
+                  enrolledProgramIds: enrolledProgramIds.toList(),
                 );
 
         if (mounted) {
