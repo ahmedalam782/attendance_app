@@ -7,11 +7,13 @@ extension AttendanceCubitScan on AttendanceCubit {
     required String scannedBy,
   }) async {
     final session = state.activeSession;
-    if (session == null) {
+    if (session == null || session.isClosed) {
       _emitFeedback(
         ScanFeedbackType.invalid,
         '',
-        LocaleKeys.attendance_no_open_sessions.tr(),
+        session == null
+            ? LocaleKeys.attendance_no_open_sessions.tr()
+            : LocaleKeys.attendance_session_not_open.tr(),
       );
       return;
     }

@@ -24,6 +24,7 @@ import '../../../../programs/domain/entities/program.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_state.dart';
 import '../../../../sessions/data/models/session_model.dart';
+import '../../../../sessions/domain/entities/session.dart';
 
 class AdminScannerBody extends StatefulWidget {
   const AdminScannerBody({super.key});
@@ -92,140 +93,12 @@ class _AdminScannerBodyState extends State<AdminScannerBody> {
 
     await showAppSheet<void>(
       context,
-      builder: (sheetContext) {
-        return AppSheetPadding(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSheetHeader(
-                title: LocaleKeys.attendance_select_session_hint.tr(),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: programs.length,
-                  separatorBuilder: (_, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, pIndex) {
-                    final program = programs[pIndex];
-                    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      future: FirebaseFirestore.instance
-                          .collection('programs')
-                          .doc(program.id)
-                          .collection('sessions')
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
-                        }
-                        final rawDocs = snapshot.data?.docs ?? [];
-                        if (rawDocs.isEmpty) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 4,
-                            ),
-                            child: Text(
-                              '${program.title}: ${LocaleKeys.sessions_empty_sessions.tr()}',
-                              style: 12.regular.copyWith(color: AppColors.slate400),
-                            ),
-                          );
-                        }
-                        final docs = rawDocs.toList()
-                          ..sort((a, b) {
-                            final aStart = (a.data()['startAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
-                            final bStart = (b.data()['startAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
-                            return bStart.compareTo(aStart);
-                          });
-                        final sessions = docs
-                            .map((d) => SessionModel.fromFirestore(d, program.id).toEntity())
-                            .toList();
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 4,
-                              ),
-                              child: Text(
-                                program.title,
-                                style: 13.bold.copyWith(color: AppColors.slate700),
-                              ),
-                            ),
-                            ...sessions.map((session) {
-                              final isOpen = session.isOpen;
-                              return InkWell(
-                                onTap: () {
-                                  this
-                                      .context
-                                      .read<AttendanceCubit>()
-                                      .setActiveSession(session);
-                                  Navigator.of(sheetContext).pop();
-                                },
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isOpen
-                                        ? AppColors.emeraldLight
-                                        : AppColors.slate100,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isOpen
-                                          ? AppColors.present.withValues(alpha: 0.3)
-                                          : AppColors.slate200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        isOpen
-                                            ? Icons.check_circle_rounded
-                                            : Icons.schedule_rounded,
-                                        size: 18,
-                                        color: isOpen
-                                            ? AppColors.present
-                                            : AppColors.slate500,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          session.title,
-                                          style: 14.bold.copyWith(
-                                            color: AppColors.slate900,
-                                          ),
-                                        ),
-                                      ),
-                                      StatusChip.fromString(session.status),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
+      builder: (_) => _ActiveSessionPickerSheet(
+        programs: programs,
+        onSessionSelected: (session) {
+          this.context.read<AttendanceCubit>().setActiveSession(session);
+        },
+      ),
     );
   }
 
@@ -809,4 +682,223 @@ class _ScannerFramingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ActiveSessionPickerSheet extends StatefulWidget {
+  const _ActiveSessionPickerSheet({
+    required this.programs,
+    required this.onSessionSelected,
+  });
+
+  final List<Program> programs;
+  final ValueChanged<Session> onSessionSelected;
+
+  @override
+  State<_ActiveSessionPickerSheet> createState() => _ActiveSessionPickerSheetState();
+}
+
+class _ActiveSessionPickerSheetState extends State<_ActiveSessionPickerSheet> {
+  bool _isLoading = true;
+  final Map<Program, List<Session>> _openSessionsByProgram = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOpenSessions();
+  }
+
+  Future<void> _loadOpenSessions() async {
+    final Map<Program, List<Session>> result = {};
+    for (final program in widget.programs) {
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('programs')
+            .doc(program.id)
+            .collection('sessions')
+            .get();
+
+        final sessions = snap.docs
+            .map((d) => SessionModel.fromFirestore(d, program.id).toEntity())
+            .where((s) => s.isOpen)
+            .toList()
+          ..sort((a, b) => b.startAt.compareTo(a.startAt));
+
+        if (sessions.isNotEmpty) {
+          result[program] = sessions;
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _openSessionsByProgram
+          ..clear()
+          ..addAll(result);
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timeFormat = DateFormat('hh:mm a');
+
+    return AppSheetPadding(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppSheetHeader(
+            title: LocaleKeys.attendance_select_session_hint.tr(),
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading) ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ] else if (_openSessionsByProgram.isEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.slate100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.event_busy_rounded,
+                      size: 32,
+                      color: AppColors.slate400,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    LocaleKeys.attendance_no_open_sessions.tr(),
+                    style: 14.bold.copyWith(color: AppColors.slate800),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    context.locale.languageCode == 'ar'
+                        ? 'لا توجد جلسات مفتوحة للمسح حالياً. يرجى فتح جلسة من صفحة البرامج أولاً لبدء المسح.'
+                        : 'No sessions are currently open for scanning. Open a session from the Programs screen first.',
+                    style: 12.regular.copyWith(color: AppColors.slate500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final entry in _openSessionsByProgram.entries) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 6, left: 4, right: 4),
+                      child: Text(
+                        entry.key.title,
+                        style: 13.bold.copyWith(color: AppColors.slate700),
+                      ),
+                    ),
+                    for (final session in entry.value)
+                      InkWell(
+                        onTap: () {
+                          widget.onSessionSelected(session);
+                          Navigator.of(context).pop();
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.emeraldLight.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.present.withValues(alpha: 0.3),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.emeraldLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.radio_button_checked_rounded,
+                                  size: 16,
+                                  color: AppColors.present,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      session.title,
+                                      style: 14.bold.copyWith(color: AppColors.slate900),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${timeFormat.format(session.startAt)} - ${timeFormat.format(session.endAt)} · ${session.attendanceCount} attended',
+                                      style: 11.medium.copyWith(color: AppColors.slate500),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: AppColors.present.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.present,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      LocaleKeys.sessions_status_open.tr(),
+                                      style: 11.bold.copyWith(color: AppColors.present),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
 }
