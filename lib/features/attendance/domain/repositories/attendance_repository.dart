@@ -15,4 +15,10 @@ abstract class AttendanceRepository {
   Stream<List<AttendanceRecord>> watchStudentAttendanceHistory(
     String studentId,
   );
+
+  Future<Result<void>> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  });
 }

@@ -16,11 +16,17 @@ class ProgramCard extends StatelessWidget {
     required this.program,
     this.onTap,
     this.showInviteCode = true,
+    this.isAdmin = false,
+    this.onEdit,
+    this.onDelete,
   });
 
   final Program program;
   final VoidCallback? onTap;
   final bool showInviteCode;
+  final bool isAdmin;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   Color get _typeColor {
     if (program.isBootcamp) return AppColors.late;
@@ -150,6 +156,71 @@ class ProgramCard extends StatelessWidget {
                         color: AppColors.primary,
                       ),
                     ),
+                  ),
+                ],
+                if (isAdmin && (onEdit != null || onDelete != null)) ...[
+                  const SizedBox(width: 4),
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      size: 20,
+                      color: AppColors.slate400,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    style: IconButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit?.call();
+                      if (value == 'delete') onDelete?.call();
+                    },
+                    itemBuilder: (context) => [
+                      if (onEdit != null)
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.slate700,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                LocaleKeys.programs_edit_program.tr(),
+                                style: 13.medium.copyWith(
+                                  color: AppColors.slate900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (onDelete != null)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: AppColors.absent,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                LocaleKeys.programs_delete_program.tr(),
+                                style: 13.medium.copyWith(
+                                  color: AppColors.absent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ],

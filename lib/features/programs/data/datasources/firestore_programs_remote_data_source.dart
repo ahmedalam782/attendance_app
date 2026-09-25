@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../domain/params/create_program_params.dart';
 import '../../domain/params/join_program_params.dart';
+import '../../domain/params/update_program_params.dart';
 import '../models/program_model.dart';
 import 'programs_remote_data_source.dart';
 
@@ -128,5 +129,46 @@ class FirestoreProgramsRemoteDataSource implements ProgramsRemoteDataSource {
       );
     }
     return ProgramModel.fromFirestore(doc);
+  }
+
+  @override
+  Future<ProgramModel> updateProgram(UpdateProgramParams params) async {
+    final docRef = _programs.doc(params.id);
+    await docRef.update({
+      'title': params.title.trim(),
+      'type': params.type,
+      'description': params.description.trim(),
+      'location': params.location.trim(),
+      if (params.startDate != null)
+        'startDate': Timestamp.fromDate(params.startDate!),
+      if (params.endDate != null)
+        'endDate': Timestamp.fromDate(params.endDate!),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    final snap = await docRef.get();
+    return ProgramModel.fromFirestore(snap);
+  }
+
+  @override
+  Future<void> deleteProgram(String programId) async {
+    final programRef = _programs.doc(programId);
+
+    // Delete subcollections (students, sessions & attendance)
+    final sessionsSnap = await programRef.collection('sessions').get();
+    for (final sessionDoc in sessionsSnap.docs) {
+      final attendanceSnap = await sessionDoc.reference.collection('attendance').get();
+      for (final attDoc in attendanceSnap.docs) {
+        await attDoc.reference.delete();
+      }
+      await sessionDoc.reference.delete();
+    }
+
+    final studentsSnap = await programRef.collection('students').get();
+    for (final studentDoc in studentsSnap.docs) {
+      await studentDoc.reference.delete();
+    }
+
+    await programRef.delete();
   }
 }

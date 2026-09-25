@@ -229,7 +229,14 @@
     "show_qr": "Show Program QR",
     "qr_scan_instruction": "Point the camera at the program invite QR",
     "qr_display_subtitle": "Let students scan this QR code to join instantly",
-    "share_qr": "Share QR & Invite Code"
+    "share_qr": "Share QR & Invite Code",
+    "edit_program": "Edit Program",
+    "edit_program_subtitle": "Update program title, type, location, and dates",
+    "delete_program": "Delete Program",
+    "delete_confirm_title": "Delete Program?",
+    "delete_confirm_desc": "Are you sure you want to delete '{title}'? All sessions and enrollments in this program will be permanently deleted.",
+    "deleted_success": "Program deleted successfully",
+    "updated_success": "Program updated successfully"
   },
   "sessions": {
     "create_title": "Schedule Session",
@@ -283,7 +290,11 @@
     "pass_offline_ready": "Offline QR pass is active",
     "pass_scan_instruction": "Show this QR code to the instructor at entry",
     "history_records": "Recorded Sessions",
-    "history_empty": "No check-ins recorded yet"
+    "history_empty": "No check-ins recorded yet",
+    "delete_record": "Delete Attendance Record",
+    "delete_record_confirm_title": "Delete Attendance Record?",
+    "delete_record_confirm_desc": "Are you sure you want to delete the attendance record for {name}?",
+    "record_deleted": "Attendance record deleted successfully"
   },
   "reports": {
     "filter_all": "All Programs",

@@ -135,12 +135,72 @@ class _SessionAttendanceSheetState extends State<SessionAttendanceSheet> {
                 icon: Icons.cancel_outlined,
                 student: student,
               ),
+              if (existingRecord != null) ...[
+                const SizedBox(height: 12),
+                const Divider(color: AppColors.slate200, height: 1),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    Navigator.of(bottomSheetContext).pop();
+                    _confirmDeleteAttendance(student);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.absent.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.absent.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_outline_rounded, color: AppColors.absent, size: 20),
+                        const SizedBox(width: 12),
+                        Text(
+                          LocaleKeys.attendance_delete_record.tr(),
+                          style: 14.bold.copyWith(color: AppColors.absent),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.absent),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
             ],
           ),
         );
       },
     );
+  }
+
+  Future<void> _confirmDeleteAttendance(EnrolledStudent student) async {
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: LocaleKeys.attendance_delete_record_confirm_title.tr(),
+      message: LocaleKeys.attendance_delete_record_confirm_desc.tr(
+        namedArgs: {'name': student.name},
+      ),
+      confirmLabel: LocaleKeys.attendance_delete_record.tr(),
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    final success = await context.read<AttendanceCubit>().deleteAttendance(
+          programId: widget.program.id,
+          sessionId: widget.session.id,
+          studentId: student.id,
+        );
+    if (success && mounted) {
+      CustomToast(
+        context: context,
+        header: LocaleKeys.attendance_record_deleted.tr(),
+        type: ToastificationType.success,
+      ).showToast();
+    }
   }
 
   Widget _buildStatusOption(

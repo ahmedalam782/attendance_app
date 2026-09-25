@@ -5,6 +5,7 @@ import 'package:attendance_app/core/crypto/qr_token_service.dart';
 import 'package:attendance_app/features/attendance/domain/entities/attendance_record.dart';
 import 'package:attendance_app/features/attendance/domain/params/record_attendance_params.dart';
 import 'package:attendance_app/features/attendance/domain/repositories/attendance_repository.dart';
+import 'package:attendance_app/features/attendance/domain/use_cases/delete_attendance_use_case.dart';
 import 'package:attendance_app/features/attendance/domain/use_cases/record_attendance_use_case.dart';
 import 'package:attendance_app/features/attendance/domain/use_cases/watch_session_attendance_use_case.dart';
 import 'package:attendance_app/features/attendance/domain/use_cases/watch_student_attendance_history_use_case.dart';
@@ -40,6 +41,17 @@ class FakeAttendanceRepository implements AttendanceRepository {
   }
 
   @override
+  Future<Result<void>> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  }) async {
+    recorded.removeWhere((r) => r.sessionId == sessionId && r.studentId == studentId);
+    _sessionController.add(List.from(recorded));
+    return const Success();
+  }
+
+  @override
   Stream<List<AttendanceRecord>> watchSessionAttendance(
     String programId,
     String sessionId,
@@ -71,6 +83,7 @@ void main() {
       WatchSessionAttendanceUseCase(repository),
       WatchStudentAttendanceHistoryUseCase(repository),
       tokenService,
+      DeleteAttendanceUseCase(repository),
     );
   });
 

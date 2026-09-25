@@ -5,11 +5,14 @@ import 'package:attendance_app/core/api/base_state/base_state.dart';
 import 'package:attendance_app/features/programs/domain/entities/program.dart';
 import 'package:attendance_app/features/programs/domain/params/create_program_params.dart';
 import 'package:attendance_app/features/programs/domain/params/join_program_params.dart';
+import 'package:attendance_app/features/programs/domain/params/update_program_params.dart';
 import 'package:attendance_app/features/programs/domain/repositories/programs_repository.dart';
 import 'package:attendance_app/features/programs/domain/use_cases/create_program_use_case.dart';
+import 'package:attendance_app/features/programs/domain/use_cases/delete_program_use_case.dart';
 import 'package:attendance_app/features/programs/domain/use_cases/get_admin_programs_use_case.dart';
 import 'package:attendance_app/features/programs/domain/use_cases/get_student_programs_use_case.dart';
 import 'package:attendance_app/features/programs/domain/use_cases/join_program_by_code_use_case.dart';
+import 'package:attendance_app/features/programs/domain/use_cases/update_program_use_case.dart';
 import 'package:attendance_app/features/programs/presentation/view_model/cubit/programs_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,6 +59,27 @@ class FakeProgramsRepository implements ProgramsRepository {
   }
 
   @override
+  Future<Result<Program>> updateProgram(UpdateProgramParams params) async {
+    final program = Program(
+      id: params.id,
+      title: params.title,
+      type: params.type,
+      ownerId: 'admin1',
+      inviteCode: 'TEST12',
+      description: params.description,
+      location: params.location,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    );
+    return Success(data: program);
+  }
+
+  @override
+  Future<Result<void>> deleteProgram(String programId) async {
+    return const Success();
+  }
+
+  @override
   Future<Result<Program>> getProgramById(String programId) async {
     return const Success(
       data: Program(
@@ -85,6 +109,8 @@ void main() {
       GetStudentProgramsUseCase(repository),
       CreateProgramUseCase(repository),
       JoinProgramByCodeUseCase(repository),
+      UpdateProgramUseCase(repository),
+      DeleteProgramUseCase(repository),
     );
   });
 

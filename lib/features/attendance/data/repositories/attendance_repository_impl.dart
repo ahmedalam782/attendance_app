@@ -38,4 +38,16 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
       _remote.watchStudentAttendanceHistory(studentId).map(
             (models) => models.map((m) => m.toEntity()).toList(),
           );
+
+  @override
+  Future<Result<void>> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  }) =>
+      executeFirebase(() => _remote.deleteAttendance(
+            programId: programId,
+            sessionId: sessionId,
+            studentId: studentId,
+          ));
 }

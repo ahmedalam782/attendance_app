@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
 import '../../../../../core/common/widgets/custom_button.dart';
 import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/languages/locale_keys.g.dart';
@@ -216,6 +217,44 @@ class _InstructorInvitesHistoryBodyState
     SharePlus.instance.share(ShareParams(text: message));
   }
 
+  Future<void> _deleteInvite(InstructorInviteItem item) async {
+    final isArabic = context.locale.languageCode == 'ar';
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: isArabic ? 'حذف كود الدعوة؟' : 'Delete Invite Code?',
+      message: isArabic
+          ? 'هل أنت متأكد من حذف كود الدعوة "${item.code}" نهائياً؟'
+          : 'Are you sure you want to permanently delete invite code "${item.code}"?',
+      confirmLabel: isArabic ? 'حذف الكود' : 'Delete Code',
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('instructorInvites').doc(item.code).delete();
+      setState(() {
+        _invites.removeWhere((it) => it.code == item.code);
+      });
+      if (mounted) {
+        CustomToast(
+          context: context,
+          header: isArabic ? 'تم حذف كود الدعوة بنجاح' : 'Invite code deleted successfully',
+          type: ToastificationType.success,
+        ).showToast();
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomToast(
+          context: context,
+          header: isArabic ? 'فشل حذف كود الدعوة' : 'Failed to delete invite code',
+          type: ToastificationType.error,
+        ).showToast();
+      }
+    }
+  }
+
   String _formatDate(DateTime? dt) {
     if (dt == null) return '';
     return DateFormat('yyyy/MM/dd · hh:mm a').format(dt);
@@ -392,6 +431,23 @@ class _InstructorInvitesHistoryBodyState
                           Text(
                             isArabic ? 'مشاركة' : 'Share',
                             style: 11.bold.copyWith(color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _deleteInvite(item),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.absent),
+                          const SizedBox(width: 3),
+                          Text(
+                            isArabic ? 'حذف' : 'Delete',
+                            style: 11.bold.copyWith(color: AppColors.absent),
                           ),
                         ],
                       ),

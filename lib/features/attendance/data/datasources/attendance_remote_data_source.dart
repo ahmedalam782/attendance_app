@@ -10,4 +10,10 @@ abstract class AttendanceRemoteDataSource {
   );
 
   Stream<List<AttendanceModel>> watchStudentAttendanceHistory(String studentId);
+
+  Future<void> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  });
 }

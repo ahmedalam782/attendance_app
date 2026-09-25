@@ -5,6 +5,7 @@ import '../../../../core/api/execute_firebase.dart';
 import '../../domain/entities/program.dart';
 import '../../domain/params/create_program_params.dart';
 import '../../domain/params/join_program_params.dart';
+import '../../domain/params/update_program_params.dart';
 import '../../domain/repositories/programs_repository.dart';
 import '../datasources/programs_remote_data_source.dart';
 
@@ -46,4 +47,15 @@ class ProgramsRepositoryImpl implements ProgramsRepository {
         final model = await _remote.getProgramById(programId);
         return model.toEntity();
       });
+
+  @override
+  Future<Result<Program>> updateProgram(UpdateProgramParams params) =>
+      executeFirebase(() async {
+        final model = await _remote.updateProgram(params);
+        return model.toEntity();
+      });
+
+  @override
+  Future<Result<void>> deleteProgram(String programId) =>
+      executeFirebase(() => _remote.deleteProgram(programId));
 }

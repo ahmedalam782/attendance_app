@@ -11,6 +11,7 @@ import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../sessions/domain/entities/session.dart';
 import '../../../domain/entities/attendance_record.dart';
 import '../../../domain/params/record_attendance_params.dart';
+import '../../../domain/use_cases/delete_attendance_use_case.dart';
 import '../../../domain/use_cases/record_attendance_use_case.dart';
 import '../../../domain/use_cases/watch_session_attendance_use_case.dart';
 import '../../../domain/use_cases/watch_student_attendance_history_use_case.dart';
@@ -31,12 +32,14 @@ class AttendanceCubit extends BaseCubit<AttendanceState> {
     this._watchSessionAttendance,
     this._watchStudentHistory,
     this._tokenService,
+    this._deleteAttendance,
   ) : super(const AttendanceState());
 
   final RecordAttendanceUseCase _recordAttendance;
   final WatchSessionAttendanceUseCase _watchSessionAttendance;
   final WatchStudentAttendanceHistoryUseCase _watchStudentHistory;
   final QrTokenService _tokenService;
+  final DeleteAttendanceUseCase _deleteAttendance;
 
   StreamSubscription<List<AttendanceRecord>>? _sessionAttendanceSub;
   StreamSubscription<List<AttendanceRecord>>? _studentHistorySub;

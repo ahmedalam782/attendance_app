@@ -229,7 +229,14 @@
     "show_qr": "عرض رمز الـ QR",
     "qr_scan_instruction": "وجّه الكاميرا نحو رمز دعوة البرنامج",
     "qr_display_subtitle": "دع الطلاب يمسحون هذا الرمز للانضمام فوراً",
-    "share_qr": "مشاركة رمز الـ QR والدعوة"
+    "share_qr": "مشاركة رمز الـ QR والدعوة",
+    "edit_program": "تعديل البرنامج",
+    "edit_program_subtitle": "تحديث عنوان البرنامج ونوعه وموقعه ومواعيده",
+    "delete_program": "حذف البرنامج",
+    "delete_confirm_title": "حذف البرنامج؟",
+    "delete_confirm_desc": "هل أنت متأكد من حذف '{title}'؟ سيتم حذف جميع الجلسات وسجلات التسجيل المرتبطة بهذا البرنامج نهائياً.",
+    "deleted_success": "تم حذف البرنامج بنجاح",
+    "updated_success": "تم تحديث البرنامج بنجاح"
   },
   "sessions": {
     "create_title": "جدولة جلسة جديدة",
@@ -283,7 +290,11 @@
     "pass_offline_ready": "رمز QR متاح ويعمل بدون إنترنت",
     "pass_scan_instruction": "أظهر هذا الرمز للمحاضر عند الدخول لتسجيل الحضور",
     "history_records": "سجلات الحضور",
-    "history_empty": "لم يتم تسجيل أي حضور حتى الآن"
+    "history_empty": "لم يتم تسجيل أي حضور حتى الآن",
+    "delete_record": "حذف سجل الحضور",
+    "delete_record_confirm_title": "حذف سجل الحضور؟",
+    "delete_record_confirm_desc": "هل أنت متأكد من حذف سجل حضور الطالب {name}؟",
+    "record_deleted": "تم حذف سجل الحضور بنجاح"
   },
   "reports": {
     "filter_all": "جميع البرامج",

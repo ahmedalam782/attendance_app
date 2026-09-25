@@ -41,4 +41,24 @@ extension AttendanceCubitManual on AttendanceCubit {
     }
     return markedCount;
   }
+
+  Future<bool> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  }) async {
+    final result = await _deleteAttendance(
+      programId: programId,
+      sessionId: sessionId,
+      studentId: studentId,
+    );
+    if (result is Success<void>) {
+      final updatedRecords = state.records
+          .where((r) => r.studentId != studentId)
+          .toList();
+      emit(state.copyWith(records: updatedRecords));
+      return true;
+    }
+    return false;
+  }
 }

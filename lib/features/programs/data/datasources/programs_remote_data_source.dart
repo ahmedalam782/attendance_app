@@ -1,5 +1,6 @@
 import '../../domain/params/create_program_params.dart';
 import '../../domain/params/join_program_params.dart';
+import '../../domain/params/update_program_params.dart';
 import '../models/program_model.dart';
 
 abstract class ProgramsRemoteDataSource {
@@ -12,4 +13,8 @@ abstract class ProgramsRemoteDataSource {
   Future<ProgramModel> joinProgramByCode(JoinProgramParams params);
 
   Future<ProgramModel> getProgramById(String programId);
+
+  Future<ProgramModel> updateProgram(UpdateProgramParams params);
+
+  Future<void> deleteProgram(String programId);
 }

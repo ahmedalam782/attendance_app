@@ -24,6 +24,8 @@ import '../../features/attendance/data/repositories/attendance_repository_impl.d
     as _i719;
 import '../../features/attendance/domain/repositories/attendance_repository.dart'
     as _i477;
+import '../../features/attendance/domain/use_cases/delete_attendance_use_case.dart'
+    as _i973;
 import '../../features/attendance/domain/use_cases/record_attendance_use_case.dart'
     as _i716;
 import '../../features/attendance/domain/use_cases/watch_session_attendance_use_case.dart'
@@ -81,6 +83,8 @@ import '../../features/programs/domain/repositories/programs_repository.dart'
     as _i1036;
 import '../../features/programs/domain/use_cases/create_program_use_case.dart'
     as _i74;
+import '../../features/programs/domain/use_cases/delete_program_use_case.dart'
+    as _i282;
 import '../../features/programs/domain/use_cases/get_admin_programs_use_case.dart'
     as _i743;
 import '../../features/programs/domain/use_cases/get_program_by_id_use_case.dart'
@@ -89,6 +93,8 @@ import '../../features/programs/domain/use_cases/get_student_programs_use_case.d
     as _i223;
 import '../../features/programs/domain/use_cases/join_program_by_code_use_case.dart'
     as _i681;
+import '../../features/programs/domain/use_cases/update_program_use_case.dart'
+    as _i1014;
 import '../../features/programs/presentation/view_model/cubit/programs_cubit.dart'
     as _i804;
 import '../../features/reports/data/datasources/firestore_reports_remote_data_source.dart'
@@ -152,9 +158,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i941.NotificationService>(
       () => _i941.NotificationService(),
     );
-    gh.factory<_i107.AuthRemoteDataSource>(
-      () => _i613.FirebaseAuthRemoteDataSource(gh<_i59.FirebaseAuth>()),
-    );
     gh.factory<_i231.EnrollmentRemoteDataSource>(
       () => _i97.FirestoreEnrollmentRemoteDataSource(
         gh<_i974.FirebaseFirestore>(),
@@ -168,6 +171,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1041.UserProfileRemoteDataSource>(
       () => _i205.FirestoreUserProfileRemoteDataSource(
         gh<_i974.FirebaseFirestore>(),
+      ),
+    );
+    gh.factory<_i107.AuthRemoteDataSource>(
+      () => _i613.FirebaseAuthRemoteDataSource(
+        gh<_i59.FirebaseAuth>(),
+        gh<_i460.SharedPreferences>(),
       ),
     );
     gh.factory<_i673.ReportsRemoteDataSource>(
@@ -228,6 +237,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i374.SessionsRepository>(
       () => _i809.SessionsRepositoryImpl(gh<_i931.SessionsRemoteDataSource>()),
     );
+    gh.factory<_i973.DeleteAttendanceUseCase>(
+      () => _i973.DeleteAttendanceUseCase(gh<_i477.AttendanceRepository>()),
+    );
     gh.factory<_i716.RecordAttendanceUseCase>(
       () => _i716.RecordAttendanceUseCase(gh<_i477.AttendanceRepository>()),
     );
@@ -260,6 +272,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i17.WatchSessionAttendanceUseCase>(),
         gh<_i614.WatchStudentAttendanceHistoryUseCase>(),
         gh<_i922.QrTokenService>(),
+        gh<_i973.DeleteAttendanceUseCase>(),
       ),
     );
     gh.factory<_i897.ForgotPasswordUseCase>(
@@ -295,6 +308,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i74.CreateProgramUseCase>(
       () => _i74.CreateProgramUseCase(gh<_i1036.ProgramsRepository>()),
     );
+    gh.factory<_i282.DeleteProgramUseCase>(
+      () => _i282.DeleteProgramUseCase(gh<_i1036.ProgramsRepository>()),
+    );
     gh.factory<_i743.GetAdminProgramsUseCase>(
       () => _i743.GetAdminProgramsUseCase(gh<_i1036.ProgramsRepository>()),
     );
@@ -307,12 +323,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i681.JoinProgramByCodeUseCase>(
       () => _i681.JoinProgramByCodeUseCase(gh<_i1036.ProgramsRepository>()),
     );
+    gh.factory<_i1014.UpdateProgramUseCase>(
+      () => _i1014.UpdateProgramUseCase(gh<_i1036.ProgramsRepository>()),
+    );
     gh.factory<_i804.ProgramsCubit>(
       () => _i804.ProgramsCubit(
         gh<_i743.GetAdminProgramsUseCase>(),
         gh<_i223.GetStudentProgramsUseCase>(),
         gh<_i74.CreateProgramUseCase>(),
         gh<_i681.JoinProgramByCodeUseCase>(),
+        gh<_i1014.UpdateProgramUseCase>(),
+        gh<_i282.DeleteProgramUseCase>(),
       ),
     );
     gh.factory<_i96.ReportsCubit>(

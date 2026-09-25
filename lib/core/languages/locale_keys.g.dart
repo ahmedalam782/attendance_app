@@ -217,6 +217,13 @@ abstract class  LocaleKeys {
   static const programs_qr_scan_instruction = 'programs.qr_scan_instruction';
   static const programs_qr_display_subtitle = 'programs.qr_display_subtitle';
   static const programs_share_qr = 'programs.share_qr';
+  static const programs_edit_program = 'programs.edit_program';
+  static const programs_edit_program_subtitle = 'programs.edit_program_subtitle';
+  static const programs_delete_program = 'programs.delete_program';
+  static const programs_delete_confirm_title = 'programs.delete_confirm_title';
+  static const programs_delete_confirm_desc = 'programs.delete_confirm_desc';
+  static const programs_deleted_success = 'programs.deleted_success';
+  static const programs_updated_success = 'programs.updated_success';
   static const programs = 'programs';
   static const sessions_create_title = 'sessions.create_title';
   static const sessions_create_subtitle = 'sessions.create_subtitle';
@@ -269,6 +276,10 @@ abstract class  LocaleKeys {
   static const attendance_pass_scan_instruction = 'attendance.pass_scan_instruction';
   static const attendance_history_records = 'attendance.history_records';
   static const attendance_history_empty = 'attendance.history_empty';
+  static const attendance_delete_record = 'attendance.delete_record';
+  static const attendance_delete_record_confirm_title = 'attendance.delete_record_confirm_title';
+  static const attendance_delete_record_confirm_desc = 'attendance.delete_record_confirm_desc';
+  static const attendance_record_deleted = 'attendance.record_deleted';
   static const attendance = 'attendance';
   static const reports_filter_all = 'reports.filter_all';
   static const reports_total_checkins = 'reports.total_checkins';

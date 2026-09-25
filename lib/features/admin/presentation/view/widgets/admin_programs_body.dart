@@ -4,7 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:toastification/toastification.dart';
+
 import '../../../../../core/common/widgets/ambient_glow_background.dart';
+import '../../../../../core/common/widgets/custom_confirmation_bottom_sheet.dart';
+import '../../../../../core/common/widgets/custom_toast.dart';
 import '../../../../../core/common/widgets/empty_state_card.dart';
 import '../../../../../core/common/widgets/feature_page_header.dart';
 import '../../../../../core/common/widgets/role_badge.dart';
@@ -12,7 +16,9 @@ import '../../../../../core/languages/locale_keys.g.dart';
 import '../../../../../core/routes/app_router.gr.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../programs/domain/entities/program.dart';
 import '../../../../programs/presentation/view/widgets/create_program_sheet.dart';
+import '../../../../programs/presentation/view/widgets/edit_program_sheet.dart';
 import '../../../../programs/presentation/view/widgets/program_card.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_cubit.dart';
 import '../../../../programs/presentation/view_model/cubit/programs_state.dart';
@@ -38,6 +44,30 @@ class _AdminProgramsBodyState extends State<AdminProgramsBody> {
   void _openCreateProgram() {
     if (_uid.isEmpty) return;
     CreateProgramSheet.show(context, ownerId: _uid);
+  }
+
+  Future<void> _confirmDeleteProgram(Program program) async {
+    final confirmed = await CustomConfirmationBottomSheet.show(
+      context,
+      title: LocaleKeys.programs_delete_confirm_title.tr(),
+      message: LocaleKeys.programs_delete_confirm_desc.tr(
+        namedArgs: {'title': program.title},
+      ),
+      confirmLabel: LocaleKeys.programs_delete_program.tr(),
+      cancelLabel: LocaleKeys.global_cancel.tr(),
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    final success = await context.read<ProgramsCubit>().deleteProgram(program.id);
+    if (success && mounted) {
+      CustomToast(
+        context: context,
+        header: LocaleKeys.programs_deleted_success.tr(),
+        type: ToastificationType.success,
+      ).showToast();
+    }
   }
 
   @override
@@ -136,6 +166,9 @@ class _AdminProgramsBodyState extends State<AdminProgramsBody> {
                           return ProgramCard(
                             program: program,
                             showInviteCode: true,
+                            isAdmin: true,
+                            onEdit: () => EditProgramSheet.show(context, program: program),
+                            onDelete: () => _confirmDeleteProgram(program),
                             onTap: () {
                               context.router.push(
                                 ProgramDetailsRoute(

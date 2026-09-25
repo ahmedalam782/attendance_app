@@ -161,4 +161,44 @@ class FirestoreAttendanceRemoteDataSource implements AttendanceRemoteDataSource 
             ..sort((a, b) => b.scannedAt.compareTo(a.scannedAt)),
         );
   }
+
+  @override
+  Future<void> deleteAttendance({
+    required String programId,
+    required String sessionId,
+    required String studentId,
+  }) async {
+    final deterministicId = FirestorePaths.deterministicAttendanceId(
+      sessionId,
+      studentId,
+    );
+
+    final docPath = FirestorePaths.attendanceDoc(
+      programId,
+      sessionId,
+      deterministicId,
+    );
+
+    final docRef = _firestore.doc(docPath);
+    final snap = await docRef.get();
+    if (!snap.exists) return;
+
+    final data = snap.data() ?? {};
+    final status = data['status'] as String? ?? '';
+    final wasAttended = status == 'present' || status == 'late';
+
+    await docRef.delete();
+
+    if (wasAttended) {
+      try {
+        final sessionRef = _firestore.doc(
+          FirestorePaths.programSession(programId, sessionId),
+        );
+        await sessionRef.update({
+          'attendanceCount': FieldValue.increment(-1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (_) {}
+    }
+  }
 }
