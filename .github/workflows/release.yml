@@ -1,0 +1,61 @@
+name: Build & Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Tests
+        run: flutter test
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Create GitHub Release & Upload APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: Smart Attendance App ${{ github.ref_name }}
+          body: |
+            ## 📱 Smart Attendance App Release ${{ github.ref_name }}
+            
+            ### ✨ What's New & Highlights:
+            - 📶 **100% Offline Attendance Queue**: Writes are cached locally and automatically sync to Cloud Firestore when reconnected.
+            - 🛡️ **Anti-Fraud QR Security**: Dynamic 20s rotating HMAC tokens + Ed25519 student identity cryptography.
+            - 🔄 **Real-Time Attendance Sync**: Live badges and sync indicators across student history and session rosters.
+            - 📋 **Session Management**: Full create, edit, delete, and real-time status controls.
+            - 👨‍🏫 **Instructor Code Redemption**: Streamlined activation for teaching staff.
+            - 🌍 **Full Localization**: English & Arabic RTL support.
+            
+            ### 📥 Download & Install:
+            Download the `app-release.apk` below and install it directly on your Android device.
+          files: build/app/outputs/flutter-apk/app-release.apk
+          draft: false
+          prerelease: false
